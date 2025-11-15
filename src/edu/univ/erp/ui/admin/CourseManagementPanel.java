@@ -7,19 +7,18 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 /**
- * Admin panel for managing sections (add/view).
- * Corresponds to: edu.univ.erp.ui.admin.SectionManagementPanel
- * Design: image_3edd41.png
+ * Admin panel for managing courses (add/view).
+ * Corresponds to: edu.univ.erp.ui.admin.CourseManagementPanel
+ * Design: image_3eda7c.png
  * INCLUDES "Go Back" button.
  */
-public class SectionManagementPanel extends JPanel {
+public class CourseManagementPanel extends JPanel {
 
-    private JTable sectionsTable;
+    private JTable coursesTable;
     private DefaultTableModel tableModel;
-    private JComboBox<String> courseComboBox, instructorComboBox;
-    private JTextField sectionNumField, timeField, capacityField;
+    private JTextField codeField, titleField, creditsField;
 
-    public SectionManagementPanel(Runnable onGoBack) {
+    public CourseManagementPanel(Runnable onGoBack) {
         setLayout(new BorderLayout(0, 20));
         setBorder(new EmptyBorder(20, 40, 40, 40));
 
@@ -50,7 +49,7 @@ public class SectionManagementPanel extends JPanel {
         goBackButton.setForeground(Color.BLUE.darker());
         goBackButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        JLabel titleLabel = new JLabel("Manage Sections");
+        JLabel titleLabel = new JLabel("Manage Courses");
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
         titleLabel.setHorizontalAlignment(JLabel.CENTER);
 
@@ -74,56 +73,38 @@ public class SectionManagementPanel extends JPanel {
         gbc.gridx = 0;
 
         gbc.gridy = 0; gbc.weightx = 1.0; gbc.insets = new Insets(0, 0, 20, 0);
-        JLabel title = new JLabel("Create New Section");
+        JLabel title = new JLabel("Create New Course");
         title.setFont(new Font("SansSerif", Font.BOLD, 24));
         panel.add(title, gbc);
 
-        // --- TODO: Load course/instructor lists from service ---
-        String[] courses = {"Select course", "CS-101", "MATH-201", "ENG-105"};
-        String[] instructors = {"Select instructor", "Dr. Smith", "Prof. Johnson"};
-
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
-        panel.add(new JLabel("Course"), gbc);
+        panel.add(new JLabel("Course Code"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
-        courseComboBox = new JComboBox<>(courses);
-        courseComboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        panel.add(courseComboBox, gbc);
+        codeField = new JTextField();
+        codeField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        panel.add(codeField, gbc);
 
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
-        panel.add(new JLabel("Section Number"), gbc);
+        panel.add(new JLabel("Course Title"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
-        sectionNumField = new JTextField();
-        sectionNumField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        panel.add(sectionNumField, gbc);
+        titleField = new JTextField();
+        titleField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        panel.add(titleField, gbc);
 
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
-        panel.add(new JLabel("Time"), gbc);
-        gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
-        timeField = new JTextField();
-        timeField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        panel.add(timeField, gbc);
-
-        gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
-        panel.add(new JLabel("Capacity"), gbc);
-        gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
-        capacityField = new JTextField();
-        capacityField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        panel.add(capacityField, gbc);
-
-        gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
-        panel.add(new JLabel("Instructor"), gbc);
+        panel.add(new JLabel("Credits"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 20, 0);
-        instructorComboBox = new JComboBox<>(instructors);
-        instructorComboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        panel.add(instructorComboBox, gbc);
+        creditsField = new JTextField();
+        creditsField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        panel.add(creditsField, gbc);
 
         gbc.gridy++; gbc.insets = new Insets(10, 0, 0, 0);
-        JButton createButton = new JButton("Create Section");
+        JButton createButton = new JButton("Create Course");
         createButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         createButton.setBackground(new Color(0, 82, 204));
         createButton.setForeground(Color.WHITE);
         createButton.setPreferredSize(new Dimension(100, 40));
-        createButton.addActionListener(e -> onCreateSection());
+        createButton.addActionListener(e -> onCreateCourse());
         panel.add(createButton, gbc);
 
         gbc.gridy++; gbc.weighty = 1.0;
@@ -136,15 +117,16 @@ public class SectionManagementPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout(0, 15));
         panel.setOpaque(false);
 
-        JLabel title = new JLabel("Existing Sections");
+        JLabel title = new JLabel("Existing Courses");
         title.setFont(new Font("SansSerif", Font.BOLD, 24));
         panel.add(title, BorderLayout.NORTH);
 
-        String[] columnNames = {"Course", "Section", "Time", "Capacity", "Instructor"};
+        String[] columnNames = {"Code", "Title", "Credits"};
         // --- TODO: Load this data from your service layer ---
         Object[][] data = {
-                {"CS-101", "001", "MWF 9:00 AM", 50, "Dr. Smith"},
-                {"MATH-201", "001", "TTh 10:30 AM", 40, "Prof. Johnson"}
+                {"CS-101", "Intro to Programming", 3},
+                {"MATH-201", "Calculus II", 4},
+                {"ENG-105", "English Literature", 3}
         };
 
         tableModel = new DefaultTableModel(data, columnNames) {
@@ -152,48 +134,42 @@ public class SectionManagementPanel extends JPanel {
             public boolean isCellEditable(int row, int column) { return false; }
         };
 
-        sectionsTable = new JTable(tableModel);
-        sectionsTable.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        sectionsTable.setRowHeight(35);
-        sectionsTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
+        coursesTable = new JTable(tableModel);
+        coursesTable.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        coursesTable.setRowHeight(35);
+        coursesTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
 
-        JScrollPane scrollPane = new JScrollPane(sectionsTable);
+        JScrollPane scrollPane = new JScrollPane(coursesTable);
         scrollPane.setBorder(new LineBorder(Color.LIGHT_GRAY));
         panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
     }
 
-    private void onCreateSection() {
-        String course = (String) courseComboBox.getSelectedItem();
-        String section = sectionNumField.getText();
-        String time = timeField.getText();
-        String capacityStr = capacityField.getText();
-        String instructor = (String) instructorComboBox.getSelectedItem();
+    private void onCreateCourse() {
+        String code = codeField.getText();
+        String title = titleField.getText();
+        String creditsStr = creditsField.getText();
 
-        if (section.isEmpty() || time.isEmpty() || capacityStr.isEmpty() || "Select course".equals(course) || "Select instructor".equals(instructor)) {
+        if (code.isEmpty() || title.isEmpty() || creditsStr.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         try {
-            int capacity = Integer.parseInt(capacityStr);
+            int credits = Integer.parseInt(creditsStr);
             // --- TODO: Call your service layer ---
-            // adminService.createSection(course, section, time, capacity, instructor);
+            // adminService.createCourse(code, title, credits);
 
             // --- Placeholder Logic ---
-            tableModel.addRow(new Object[]{course, section, time, capacity, instructor});
-            // Clear form
-            courseComboBox.setSelectedIndex(0);
-            sectionNumField.setText("");
-            timeField.setText("");
-            capacityField.setText("");
-            instructorComboBox.setSelectedIndex(0);
-
-            JOptionPane.showMessageDialog(this, "Section '" + course + "-" + section + "' added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            tableModel.addRow(new Object[]{code, title, credits});
+            codeField.setText("");
+            titleField.setText("");
+            creditsField.setText("");
+            JOptionPane.showMessageDialog(this, "Course '" + code + "' added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Capacity must be a number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Credits must be a number.", "Input Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
