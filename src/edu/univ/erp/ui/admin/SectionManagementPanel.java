@@ -1,25 +1,36 @@
 package edu.univ.erp.ui.admin;
 
+import edu.univ.erp.domain.Course;
+import edu.univ.erp.domain.Instructor;
+import edu.univ.erp.service.AdminService;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.List;
 
 /**
- * Admin panel for managing sections (add/view).
- * Corresponds to: edu.univ.erp.ui.admin.SectionManagementPanel
- * Design: image_3edd41.png
- * INCLUDES "Go Back" button.
+ * Admin panel for managing sections.
+ * UPDATED: Now fully connected to the AdminService.
+ * Dropdowns are populated from the database.
  */
 public class SectionManagementPanel extends JPanel {
 
     private JTable sectionsTable;
     private DefaultTableModel tableModel;
-    private JComboBox<String> courseComboBox, instructorComboBox;
+
+    // --- UPDATED: Fields for the form ---
+    private JComboBox<Course> courseComboBox;
+    private JComboBox<Instructor> instructorComboBox;
     private JTextField sectionNumField, timeField, capacityField;
 
-    public SectionManagementPanel(Runnable onGoBack) {
+    private AdminService adminService;
+
+    public SectionManagementPanel(Runnable onGoBack, AdminService adminService) {
+        this.adminService = adminService;
+
         setLayout(new BorderLayout(0, 20));
         setBorder(new EmptyBorder(20, 40, 40, 40));
 
@@ -37,6 +48,9 @@ public class SectionManagementPanel extends JPanel {
         mainContentPanel.add(createTablePanel(), gbc);
 
         add(mainContentPanel, BorderLayout.CENTER);
+
+        // --- NEW: Load data into dropdowns after panel is built ---
+        loadDropdownData();
     }
 
     private JPanel createHeaderPanel(Runnable onGoBack) {
@@ -61,6 +75,9 @@ public class SectionManagementPanel extends JPanel {
         return headerPanel;
     }
 
+    /**
+     * UPDATED: Now uses JComboBox<Course> and JComboBox<Instructor>
+     */
     private JPanel createFormPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createCompoundBorder(
@@ -78,14 +95,11 @@ public class SectionManagementPanel extends JPanel {
         title.setFont(new Font("SansSerif", Font.BOLD, 24));
         panel.add(title, gbc);
 
-        // --- TODO: Load course/instructor lists from service ---
-        String[] courses = {"Select course", "CS-101", "MATH-201", "ENG-105"};
-        String[] instructors = {"Select instructor", "Dr. Smith", "Prof. Johnson"};
-
+        // --- Course ComboBox ---
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
         panel.add(new JLabel("Course"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
-        courseComboBox = new JComboBox<>(courses);
+        courseComboBox = new JComboBox<>(); // Empty for now
         courseComboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
         panel.add(courseComboBox, gbc);
 
@@ -97,7 +111,7 @@ public class SectionManagementPanel extends JPanel {
         panel.add(sectionNumField, gbc);
 
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
-        panel.add(new JLabel("Time"), gbc);
+        panel.add(new JLabel("Time (e.g., MWF 9:00 AM)"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
         timeField = new JTextField();
         timeField.setFont(new Font("SansSerif", Font.PLAIN, 14));
@@ -110,10 +124,11 @@ public class SectionManagementPanel extends JPanel {
         capacityField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         panel.add(capacityField, gbc);
 
+        // --- Instructor ComboBox ---
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
         panel.add(new JLabel("Instructor"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 20, 0);
-        instructorComboBox = new JComboBox<>(instructors);
+        instructorComboBox = new JComboBox<>(); // Empty for now
         instructorComboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
         panel.add(instructorComboBox, gbc);
 
@@ -133,67 +148,71 @@ public class SectionManagementPanel extends JPanel {
     }
 
     private JPanel createTablePanel() {
+        // ... (This method is the same as before, no changes) ...
         JPanel panel = new JPanel(new BorderLayout(0, 15));
         panel.setOpaque(false);
-
         JLabel title = new JLabel("Existing Sections");
         title.setFont(new Font("SansSerif", Font.BOLD, 24));
         panel.add(title, BorderLayout.NORTH);
-
         String[] columnNames = {"Course", "Section", "Time", "Capacity", "Instructor"};
-        // --- TODO: Load this data from your service layer ---
-        Object[][] data = {
-                {"CS-101", "001", "MWF 9:00 AM", 50, "Dr. Smith"},
-                {"MATH-201", "001", "TTh 10:30 AM", 40, "Prof. Johnson"}
-        };
-
+        Object[][] data = { /* TODO: Load this from service */ };
         tableModel = new DefaultTableModel(data, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
-
         sectionsTable = new JTable(tableModel);
         sectionsTable.setFont(new Font("SansSerif", Font.PLAIN, 14));
         sectionsTable.setRowHeight(35);
         sectionsTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
-
         JScrollPane scrollPane = new JScrollPane(sectionsTable);
         scrollPane.setBorder(new LineBorder(Color.LIGHT_GRAY));
         panel.add(scrollPane, BorderLayout.CENTER);
-
         return panel;
     }
 
+    /**
+     * NEW: Loads data from the service into the JComboBoxes.
+     */
+    private void loadDropdownData() {
+        // Load Courses
+        List<Course> courses = adminService.getAllCourses();
+        courseComboBox.addItem(null); // Add a "Select" option
+        for (Course c : courses) {
+            courseComboBox.addItem(c);
+        }
+
+        // Load Instructors
+        List<Instructor> instructors = adminService.getAllInstructors();
+        instructorComboBox.addItem(null); // Add a "Select" option
+        for (Instructor i : instructors) {
+            instructorComboBox.addItem(i);
+        }
+    }
+
+    /**
+     * UPDATED: Calls the AdminService to create the section.
+     */
     private void onCreateSection() {
-        String course = (String) courseComboBox.getSelectedItem();
+        // Get the selected objects from the dropdowns
+        Course course = (Course) courseComboBox.getSelectedItem();
+        Instructor instructor = (Instructor) instructorComboBox.getSelectedItem();
         String section = sectionNumField.getText();
         String time = timeField.getText();
         String capacityStr = capacityField.getText();
-        String instructor = (String) instructorComboBox.getSelectedItem();
 
-        if (section.isEmpty() || time.isEmpty() || capacityStr.isEmpty() || "Select course".equals(course) || "Select instructor".equals(instructor)) {
+        if (course == null || instructor == null || section.isEmpty() || time.isEmpty() || capacityStr.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        try {
-            int capacity = Integer.parseInt(capacityStr);
-            // --- TODO: Call your service layer ---
-            // adminService.createSection(course, section, time, capacity, instructor);
+        // --- THIS IS THE REAL BACKEND CALL ---
+        boolean success = adminService.createNewSection(course, instructor, section, time, capacityStr);
 
-            // --- Placeholder Logic ---
-            tableModel.addRow(new Object[]{course, section, time, capacity, instructor});
-            // Clear form
-            courseComboBox.setSelectedIndex(0);
-            sectionNumField.setText("");
-            timeField.setText("");
-            capacityField.setText("");
-            instructorComboBox.setSelectedIndex(0);
-
-            JOptionPane.showMessageDialog(this, "Section '" + course + "-" + section + "' added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Capacity must be a number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+        if (success) {
+            // TODO: Add to table and clear form
+            JOptionPane.showMessageDialog(this, "Section '" + course.courseCode() + "-" + section + "' added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to create section.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

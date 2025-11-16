@@ -1,73 +1,76 @@
 package edu.univ.erp.ui.instructor;
 
+import edu.univ.erp.domain.GradebookEntry;
+import edu.univ.erp.service.InstructorService;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Instructor Gradebook Panel.
- * Corresponds to: edu.univ.erp.ui.instructor.GradebookPanel
- * Design: image_3ec2db.png
- * INCLUDES "Go Back" button and an editable JTable.
+ * UPDATED: Now calls InstructorService to get/save grades.
  */
 public class GradebookPanel extends JPanel {
 
     private JTable gradesTable;
     private DefaultTableModel tableModel;
-    private Runnable onGoBack;
+    private InstructorService instructorService;
     private JLabel titleLabel;
     private JLabel classAverageLabel;
+    private int currentSectionId = -1; // To store which section we're grading
 
-    // Store weights
-    private double quizWeight = 0.20;
-    private double midtermWeight = 0.30;
-    private double finalWeight = 0.50;
+    // 1. Constructor updated
+    public GradebookPanel(Runnable onGoBack, InstructorService instructorService) {
+        this.instructorService = instructorService;
 
-    public GradebookPanel(Runnable onGoBack) {
-        this.onGoBack = onGoBack;
         setLayout(new BorderLayout(0, 15));
         setBorder(new EmptyBorder(20, 40, 40, 40));
-
-        add(createHeaderPanel(), BorderLayout.NORTH);
+        add(createHeaderPanel(onGoBack), BorderLayout.NORTH);
         add(createTablePanel(), BorderLayout.CENTER);
     }
 
     /**
-     * Public method called by Main to load data for a specific course.
+     * 2. Public method called by Main to load data
      */
-    public void loadCourse(String courseCode) {
-        titleLabel.setText(courseCode + " Gradebook");
+    public void loadGradebook(int sectionId) {
+        this.currentSectionId = sectionId;
+        titleLabel.setText("Gradebook (Section " + sectionId + ")");
 
-        // --- TODO: Call your service layer here ---
-        // Example: GradebookData data = gradebookService.getGradebook(courseCode);
-        // For now, load dummy data
+        List<GradebookEntry> entries = instructorService.getGradebook(sectionId);
 
-        Object[][] data = {
-                {"Alice Johnson", "85", "78", "92", "-"},
-                {"Bob Smith", "92", "88", "85", "-"},
-                {"Carol White", "78", "82", "88", "-"}
-        };
-        tableModel.setDataVector(data, getColumnNames());
-        classAverageLabel.setText("Class Average: 86.0%"); // Placeholder
+        tableModel.setRowCount(0); // Clear table
+        for (GradebookEntry entry : entries) {
+            tableModel.addRow(new Object[]{
+                    entry.studentId(),
+                    entry.studentName(),
+                    entry.quizScore(),
+                    entry.midtermScore(),
+                    entry.finalScore(),
+                    entry.finalGrade() != null ? entry.finalGrade() : "-"
+            });
+        }
+
+        // TODO: Calculate and set class average
+        classAverageLabel.setText("Class Average: -");
     }
 
     private String[] getColumnNames() {
-        // Create column names with weights
         return new String[]{
+                "Student ID",
                 "Student Name",
-                String.format("Quiz (%.0f%%)", quizWeight * 100),
-                String.format("Midterm (%.0f%%)", midtermWeight * 100),
-                String.format("Final (%.0f%%)", finalWeight * 100),
-                "Calculated Grade"
+                "Quiz (20%)",
+                "Midterm (30%)",
+                "Final (50%)",
+                "Final Grade"
         };
     }
 
-    private JPanel createHeaderPanel() {
+    private JPanel createHeaderPanel(Runnable onGoBack) {
         JPanel headerPanel = new JPanel(new BorderLayout(20, 0));
-
-        // --- "Go Back" Button (Styled as a link) ---
         JButton goBackButton = new JButton("← Go Back");
         goBackButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         goBackButton.addActionListener(e -> onGoBack.run());
@@ -76,29 +79,23 @@ public class GradebookPanel extends JPanel {
         goBackButton.setForeground(Color.BLUE.darker());
         goBackButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        // --- Title Panel (Center) ---
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
-
-        titleLabel = new JLabel("CS-101 Gradebook"); // Will be updated by loadCourse()
+        titleLabel = new JLabel("Gradebook");
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
-
-        classAverageLabel = new JLabel("Class Average: 86.0%");
+        classAverageLabel = new JLabel("Class Average: -");
         classAverageLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
         classAverageLabel.setForeground(Color.GRAY);
-
         titlePanel.add(titleLabel);
         titlePanel.add(classAverageLabel);
 
-        // --- "Calculate" Button (Right) ---
-        JButton calculateButton = new JButton("Calculate Final Grades");
+        // 3. Button now calls onSaveAndCalculate
+        JButton calculateButton = new JButton("Save & Calculate Grades");
         calculateButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        calculateButton.setOpaque(true);
         calculateButton.setBackground(new Color(0, 82, 204));
         calculateButton.setForeground(Color.WHITE);
         calculateButton.setPreferredSize(new Dimension(200, 40));
-
-        calculateButton.addActionListener(e -> calculateGrades());
+        calculateButton.addActionListener(e -> onSaveAndCalculate());
 
         headerPanel.add(goBackButton, BorderLayout.WEST);
         headerPanel.add(titlePanel, BorderLayout.CENTER);
@@ -108,73 +105,81 @@ public class GradebookPanel extends JPanel {
     }
 
     private JScrollPane createTablePanel() {
-
         tableModel = new DefaultTableModel(null, getColumnNames()) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                // Allow editing for Quiz, Midterm, and Final columns
-                return column == 1 || column == 2 || column == 3;
+                // Allow editing for scores (cols 2, 3, 4)
+                return column == 2 || column == 3 || column == 4;
             }
         };
 
         gradesTable = new JTable(tableModel);
         gradesTable.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        gradesTable.setRowHeight(40); // Taller rows to match design
+        gradesTable.setRowHeight(40);
         gradesTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
 
-        // Make the editable cells look like the text fields in the design
-        // by using a custom editor that sets the font and a border.
         JTextField textField = new JTextField();
         textField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         DefaultCellEditor cellEditor = new DefaultCellEditor(textField);
 
-        // Apply this editor to the editable columns
-        gradesTable.getColumnModel().getColumn(1).setCellEditor(cellEditor);
-        gradesTable.getColumnModel().getColumn(2).setCellEditor(cellEditor);
-        gradesTable.getColumnModel().getColumn(3).setCellEditor(cellEditor);
-
+        gradesTable.getColumnModel().getColumn(2).setCellEditor(cellEditor); // Quiz
+        gradesTable.getColumnModel().getColumn(3).setCellEditor(cellEditor); // Midterm
+        gradesTable.getColumnModel().getColumn(4).setCellEditor(cellEditor); // Final
 
         return new JScrollPane(gradesTable);
     }
 
     /**
-     * Logic for the "Calculate Final Grades" button.
+     * 4. UPDATED: Logic for the "Save & Calculate" button.
      */
-    private void calculateGrades() {
-        // --- TODO: This should call the service layer ---
-        // service.calculateFinalGrades(courseCode, tableModel.getDataVector());
-        // For now, we'll do the calculation directly in the UI
+    private void onSaveAndCalculate() {
+        if (currentSectionId == -1) return;
 
-        DecimalFormat df = new DecimalFormat("0.0"); // Format to one decimal place
+        // Stop any cell editing to save the current value
+        if (gradesTable.isEditing()) {
+            gradesTable.getCellEditor().stopCellEditing();
+        }
 
+        // 1. Read all data from the JTable into a list
+        List<GradebookEntry> gradebook = new ArrayList<>();
         for (int row = 0; row < tableModel.getRowCount(); row++) {
             try {
-                // Get values from table (they are Strings)
-                String quizStr = tableModel.getValueAt(row, 1).toString();
-                String midtermStr = tableModel.getValueAt(row, 2).toString();
-                String finalStr = tableModel.getValueAt(row, 3).toString();
+                int studentId = (int) tableModel.getValueAt(row, 0);
+                String studentName = (String) tableModel.getValueAt(row, 1);
+                // Handle null or empty strings before parsing
+                double quiz = parseDouble(tableModel.getValueAt(row, 2));
+                double midterm = parseDouble(tableModel.getValueAt(row, 3));
+                double finalScore = parseDouble(tableModel.getValueAt(row, 4));
 
-                // Convert to numbers
-                double quiz = Double.parseDouble(quizStr);
-                double midterm = Double.parseDouble(midtermStr);
-                double finalScore = Double.parseDouble(finalStr);
-
-                // Calculate weighted grade
-                double calculatedGrade = (quiz * quizWeight) +
-                        (midterm * midtermWeight) +
-                        (finalScore * finalWeight);
-
-                // Set the new value in the "Calculated Grade" column
-                tableModel.setValueAt(df.format(calculatedGrade), row, 4);
-
+                gradebook.add(new GradebookEntry(
+                        studentId, studentName, quiz, midterm, finalScore, null
+                ));
             } catch (NumberFormatException e) {
-                // Handle cases where the text is not a valid number
-                tableModel.setValueAt("Error", row, 4);
                 JOptionPane.showMessageDialog(this,
-                        "Invalid score for student: " + tableModel.getValueAt(row, 0) +
+                        "Invalid score for student: " + tableModel.getValueAt(row, 1) +
                                 "\nPlease enter numbers only.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                return; // Stop processing
             }
         }
+
+        // 2. --- REAL BACKEND CALL ---
+        boolean success = instructorService.saveAndCalculateGrades(currentSectionId, gradebook);
+
+        if (success) {
+            JOptionPane.showMessageDialog(this, "Grades saved and calculated successfully.");
+            // 3. Refresh the table to show the new final grades
+            loadGradebook(currentSectionId);
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to save grades.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Helper to prevent crash on empty cells
+    private double parseDouble(Object obj) {
+        if (obj == null || obj.toString().isEmpty()) {
+            return 0.0;
+        }
+        return Double.parseDouble(obj.toString());
     }
 }

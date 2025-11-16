@@ -1,128 +1,131 @@
 package edu.univ.erp.ui.instructor;
 
+import edu.univ.erp.domain.SectionView;
+import edu.univ.erp.service.InstructorService;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
  * Instructor dashboard panel ("My Courses" / "My Sections").
- * Corresponds to: edu.univ.erp.ui.instructor.MySectionsPanel
- * Design: image_3e7143.png
- * This is the "home page" for instructors, so it has NO "Go Back" button.
+ * UPDATED: Now calls InstructorService to get data.
  */
 public class MySectionsPanel extends JPanel {
 
-    private Consumer<String> onOpenGradebook; // Function to call
+    private Consumer<Integer> onOpenGradebook; // Takes SectionID
+    private InstructorService instructorService;
+    private JPanel cardsPanel; // A field so loadData() can update it
 
-    public MySectionsPanel(Consumer<String> onOpenGradebook) {
+    // 1. Constructor updated
+    public MySectionsPanel(Consumer<Integer> onOpenGradebook, InstructorService instructorService) {
         this.onOpenGradebook = onOpenGradebook;
+        this.instructorService = instructorService;
 
         setLayout(new BorderLayout(40, 30));
         setBorder(new EmptyBorder(20, 40, 40, 40));
 
-        // --- Header ---
-        JPanel headerPanel = new JPanel();
-        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS)); // Stack vertically
+        add(createHeaderPanel(), BorderLayout.NORTH);
 
-        JLabel titleLabel = new JLabel("My Courses");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 32));
-
-        JLabel subtitleLabel = new JLabel("Select a course to manage grades");
-        subtitleLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        subtitleLabel.setForeground(Color.GRAY);
-
-        headerPanel.add(titleLabel);
-        headerPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        headerPanel.add(subtitleLabel);
-
-        add(headerPanel, BorderLayout.NORTH);
-
-        // --- Cards Panel ---
-        // Use FlowLayout to place cards side-by-side and wrap if needed
-        JPanel cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
-
-        // --- TODO: Load these from the service layer ---
-        // For this demo, we'll create hardcoded cards
-
-        JPanel card1 = createCourseCard(
-                "[Icon]",
-                "CS-101",
-                "Intro to Programming",
-                "35 students enrolled"
-        );
-        JPanel card2 = createCourseCard(
-                "[Icon]",
-                "CS-205",
-                "Data Structures",
-                "28 students enrolled"
-        );
-
-        cardsPanel.add(card1);
-        cardsPanel.add(card2);
-
+        cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
         add(cardsPanel, BorderLayout.CENTER);
+
+        // 2. Load data immediately
+        loadData();
     }
 
     /**
-     * Helper method to create a course card.
+     * 3. New method to fetch data from the service
      */
-    private JPanel createCourseCard(String iconText, String courseCode, String courseTitle, String enrollmentInfo) {
-        // Use BorderLayout to position elements
+    private void loadData() {
+        List<SectionView> sections = instructorService.getAssignedSections();
+        cardsPanel.removeAll(); // Clear old cards
+
+        for (SectionView section : sections) {
+            // 4. Create a card for each section
+            JPanel card = createCourseCard(
+                    "[Icon]",
+                    section.courseCode() + " (" + section.courseTitle() + ")",
+                    section.timeSlot(),
+                    section.enrolled() + " / " + section.capacity() + " students",
+                    section.sectionId() // Pass the section ID to the button
+            );
+            cardsPanel.add(card);
+        }
+        // Refresh the panel
+        cardsPanel.revalidate();
+        cardsPanel.repaint();
+    }
+
+    private JPanel createHeaderPanel() {
+        JPanel headerPanel = new JPanel(new BorderLayout());
+
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        JLabel titleLabel = new JLabel("My Courses");
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 32));
+        JLabel subtitleLabel = new JLabel("Select a course to manage grades");
+        subtitleLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        subtitleLabel.setForeground(Color.GRAY);
+        textPanel.add(titleLabel);
+        textPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        textPanel.add(subtitleLabel);
+
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        refreshButton.addActionListener(e -> loadData());
+
+        headerPanel.add(textPanel, BorderLayout.CENTER);
+        headerPanel.add(refreshButton, BorderLayout.EAST);
+
+        return headerPanel;
+    }
+
+    /**
+     * 5. Helper method updated to use the SectionID
+     */
+    private JPanel createCourseCard(String iconText, String title, String time, String enrollment, int sectionId) {
         JPanel card = new JPanel(new BorderLayout(10, 10));
         card.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(Color.LIGHT_GRAY),
                 new EmptyBorder(25, 25, 25, 25)
         ));
-        // Give the card a fixed size
         card.setPreferredSize(new Dimension(400, 150));
 
-        // --- Icon (Top Right) ---
-        JLabel iconLabel = new JLabel(iconText); // TODO: Replace with ImageIcon
+        JLabel iconLabel = new JLabel(iconText);
         iconLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
-        iconLabel.setOpaque(true);
-        iconLabel.setBackground(new Color(230, 240, 255)); // Light blue bg
-        iconLabel.setBorder(new EmptyBorder(10, 10, 10, 10));
         card.add(iconLabel, BorderLayout.EAST);
 
-        // --- Text Content (Left/Center) ---
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
-
-        JLabel codeLabel = new JLabel(courseCode);
-        codeLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
-
-        JLabel titleLabel = new JLabel(courseTitle);
-        titleLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
-
-        JLabel enrollmentLabel = new JLabel(enrollmentInfo);
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+        JLabel timeLabel = new JLabel(time);
+        timeLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        JLabel enrollmentLabel = new JLabel(enrollment);
         enrollmentLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         enrollmentLabel.setForeground(Color.GRAY);
-
-        textPanel.add(codeLabel);
-        textPanel.add(Box.createRigidArea(new Dimension(0, 5)));
         textPanel.add(titleLabel);
-        textPanel.add(Box.createVerticalGlue()); // Pushes enrollment info down
+        textPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        textPanel.add(timeLabel);
+        textPanel.add(Box.createVerticalGlue());
         textPanel.add(enrollmentLabel);
-
         card.add(textPanel, BorderLayout.CENTER);
 
-        // --- Button (Bottom) ---
         JButton openButton = new JButton("Open Gradebook");
         openButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        openButton.setOpaque(true);
         openButton.setBackground(new Color(0, 82, 204));
         openButton.setForeground(Color.WHITE);
         openButton.setPreferredSize(new Dimension(100, 40));
 
-        // Add listener to call the navigation function from Main
-        openButton.addActionListener(e -> onOpenGradebook.accept(courseCode));
+        // This now calls the navigation function from Main with the Section's ID
+        openButton.addActionListener(e -> onOpenGradebook.accept(sectionId));
 
-        // Wrap button in a panel to align it right
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         buttonPanel.add(openButton);
-
         card.add(buttonPanel, BorderLayout.SOUTH);
 
         return card;

@@ -8,27 +8,28 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 //This class handles the SQL connections for the AuthDB
-
 public class UserDAO {
-    //The CheckLogin returns the user role on success and null in case some error occurs
-    //The CheckLogin would use the Email aas key to find the role
-    //The SQL string "Select PasswordHash, Role FROM Users WHERE Email = ?" is used to find the PasswordHash and the Role from corresponding Email
-    //The Email is marked as ? since we have to take it as argument
-    //A connection is set up to the AuthDB as the AuthDBConnector
-    //Then prepare the Statement using the PrepareStatement(SQL)
-    //The setString(1, Email) binds the Email to the SQL statement
-    //Then the Password has and the Role from the table
-    public String CheckLogin(String Email, String Password){
-        String SQL = "SELECT PasswordHash, Role FROM Users WHERE Email = ?";
-        try(Connection AuthDBConnector = DatabaseUtil.GetAuthConnection(); PreparedStatement Statment = AuthDBConnector.prepareStatement(SQL)){
+
+    /**
+     * UPDATED: Now returns an AuthResult (UserID + Role) on success.
+     */
+    public AuthResult CheckLogin(String Email, String Password){
+        // UPDATED: Now selects UserID as well
+        String SQL = "SELECT UserID, PasswordHash, Role FROM Users WHERE Email = ?";
+
+        try(Connection AuthDBConnector = DatabaseUtil.GetAuthConnection();
+            PreparedStatement Statment = AuthDBConnector.prepareStatement(SQL)){
+
             Statment.setString(1, Email);
             try(ResultSet Result = Statment.executeQuery()){
                 if(Result.next()){
                     String StoredHash = Result.getString("PasswordHash");
                     String Role = Result.getString("Role");
-                    //BCrypt compares the provided password with the PasswordHash
+                    int UserID = Result.getInt("UserID"); // <-- GET THE REAL ID
+
                     if(BCrypt.checkpw(Password, StoredHash)){
-                        return Role;
+                        // Return the new object with both ID and Role
+                        return new AuthResult(UserID, Role);
                     }
                 }
             }
@@ -41,7 +42,7 @@ public class UserDAO {
         }
     }
 
-    //This function creates a new user in the AuthDB
+    //... (Your CreateAuthDBUser method is perfect, no changes) ...
     public int CreateAuthDBUser(Connection AuthDBConnection, String Email, String Password, String Role) throws Exception{
         String PasswordHash = BCrypt.hashpw(Password, BCrypt.gensalt());
         String SQL = "INSERT INTO Users (Email, PasswordHash, Role) VALUES (?, ?, ?)";
@@ -61,4 +62,23 @@ public class UserDAO {
         }
     }
 
+    //... (Your ChangePassword method is perfect, no changes) ...
+    public boolean ChangePassword(String Email, String NewPassword) {
+        String NewPasswordHash = BCrypt.hashpw(NewPassword, BCrypt.gensalt());
+        String SQL = "UPDATE Users SET PasswordHash = ? WHERE Email = ?";
+
+        try (Connection AuthDBConnector = DatabaseUtil.GetAuthConnection();
+             PreparedStatement Statement = AuthDBConnector.prepareStatement(SQL)) {
+
+            Statement.setString(1, NewPasswordHash);
+            Statement.setString(2, Email);
+
+            int rowsAffected = Statement.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

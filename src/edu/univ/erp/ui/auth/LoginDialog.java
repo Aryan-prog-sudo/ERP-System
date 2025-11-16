@@ -1,6 +1,8 @@
 package edu.univ.erp.ui.auth;
 
 import edu.univ.erp.ui.Main;
+import edu.univ.erp.service.AuthService;
+import edu.univ.erp.service.LoginResult;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -8,24 +10,32 @@ import java.util.Arrays;
 
 /**
  * Modal Login Dialog.
- * *** UPDATED: Added 'admin' role to onSignIn. ***
+ * UPDATED: Now calls the AuthService to log in.
+ * FIXED: Includes all field declarations.
  */
 public class LoginDialog extends JDialog {
 
+    // --- FIELD DECLARATIONS (This was the missing part) ---
     private JTextField emailField;
     private JPasswordField passwordField;
     private JButton signInButton;
     private JLabel messageLabel;
     private JCheckBox showPasswordCheckBox;
-    private Main mainApp;
 
-    public LoginDialog(Main parent) {
+    private Main mainApp;
+    private AuthService authService;
+
+    /**
+     * UPDATED Constructor
+     */
+    public LoginDialog(Main parent, AuthService authService) {
         super(parent, "ERP System Login", true);
         this.mainApp = parent;
+        this.authService = authService;
+
+        // (All layout code is the same)
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setResizable(false);
-
-        // ... (All layout code is identical to the previous version) ...
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(new EmptyBorder(30, 40, 30, 40));
         GridBagConstraints gbc = new GridBagConstraints();
@@ -109,25 +119,22 @@ public class LoginDialog extends JDialog {
         messageLabel.setText(message);
     }
 
+    /**
+     * UPDATED onSignIn method
+     */
     private void onSignIn() {
         String username = emailField.getText();
         char[] password = passwordField.getPassword();
 
-        String role = null;
-        if (username.equals("student@university.edu") && "student123".equals(new String(password))) {
-            role = "student";
-        } else if (username.equals("instructor@university.edu") && "instructor123".equals(new String(password))) {
-            role = "instructor";
-        } else if (username.equals("admin@university.edu") && "admin123".equals(new String(password))) { // NEW
-            role = "admin";
-        }
+        LoginResult result = authService.login(username, new String(password));
 
-        if (role != null) {
+        if (result.isSuccess) {
             this.dispose();
-            mainApp.onLoginSuccess(role, username);
+            // --- UPDATED: Pass the REAL UserID to Main ---
+            mainApp.onLoginSuccess(result.Role, username, result.userId);
         } else {
             JOptionPane.showMessageDialog(this,
-                    "Incorrect username or password.",
+                    result.Message,
                     "Login Failed",
                     JOptionPane.ERROR_MESSAGE);
         }
