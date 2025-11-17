@@ -6,7 +6,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-
+//This class is basically used to access the SystemSetting table in the StudentDB
+//That table just contains weather the maintenance mode is on or off
 public class SettingsDAO {
     public boolean IsMaintenanceModeOn(){
         String SQL = "SELECT SettingValue FROM SystemSettings WHERE SettingKey = 'MaintenanceMode'";

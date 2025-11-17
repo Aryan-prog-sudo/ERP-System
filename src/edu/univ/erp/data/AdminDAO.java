@@ -4,15 +4,8 @@ package edu.univ.erp.data;
 import edu.univ.erp.domain.Course;
 import edu.univ.erp.domain.Instructor;
 import edu.univ.erp.util.DatabaseUtil;
+import edu.univ.erp.domain.AdminSectionView;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
-import edu.univ.erp.domain.Course;
-import edu.univ.erp.domain.Instructor;
-import edu.univ.erp.util.DatabaseUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,133 +14,200 @@ import java.util.List;
 
 
 //This class handles the connection to the StudentDB
+//These connections would mainly be used by the user Admin thus the name of the class
 public class AdminDAO {
-    //This methods adds the student profile to the students table in the StudentDB
+    //This method adds the student profile to the students table in the StudentDB
+    //This method uses the INSERT Query to insert into the table
+    //This method is called in the createNewUser in AdminService while inserting a new student
     public boolean CreateStudentProfile(Connection StudentDBConnection, int UserID, String FullName, String Email) throws Exception{
         String SQL = "INSERT INTO Students (UserID, FullName, Email) VALUES (?,?,?)";
         try(PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)){
             Statement.setInt(1,UserID);
             Statement.setString(2, FullName);
             Statement.setString(3, Email);
-            return Statement.executeUpdate()>0;
+            boolean Is_Inserted = Statement.executeUpdate()>0;
+            if(Is_Inserted){
+                System.out.println("Student: "+FullName+" Inserted in the Students table of StudentDB");
+            }
+            else{
+                System.out.println("Student: "+ FullName+ " Not insterted in student table");
+                System.out.println("Method: CreateStudentProfile, Class: AdminDAO");
+            }
+            return Is_Inserted;
             //This returns true if row was inserted in the table Students
         }
     }
 
+
     //This method adds the instructor profile to the instructor table in the StudentDB
-    public boolean CreateInstructorProfile(Connection StudentDBConnection, int UserID, String FullName, String Email) throws Exception{
-        String SQL = "INSERT INTO Instructors (UserID, FullName, Email, Department) VALUES (?, ?, ?, ?)";
-        try(PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)){
-            Statement.setInt(1,UserID);
+    public boolean CreateInstructorProfile(Connection StudentDBConnection, int UserID, String FullName, String Email) throws Exception {
+
+        // UPDATED: SQL no longer includes the Department column
+        String SQL = "INSERT INTO Instructors (UserID, FullName, Email) VALUES (?, ?, ?)";
+
+        try (PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)) {
+            Statement.setInt(1, UserID);
             Statement.setString(2, FullName);
             Statement.setString(3, Email);
-            Statement.setString(4, "Not Assigned");
-            return Statement.executeUpdate()>0;
+            // The line for "Department" has been removed
+
+            return Statement.executeUpdate() > 0;
         }
     }
 
-    //This adds a new course to the course table in the  StudentDB
-    public boolean CreateCourse(String Code, String Title, int Credits){
+    //This adds a new course to the course table in the StudentDB
+    public boolean CreateCourse(String CourseCode, String Title, int Credits){
         String SQL = "INSERT INTO Course (CourseCode, CourseTitle, Credits) VALUES (?, ?, ?)";
         try(Connection StudentDBConnection = edu.univ.erp.util.DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)){
-            Statement.setString(1, Code);
+            Statement.setString(1, CourseCode);
             Statement.setString(2, Title);
             Statement.setInt(3, Credits);
-            return Statement.executeUpdate()>0;
+            boolean Is_Inserted = Statement.executeUpdate()>0;
+            if(Is_Inserted){
+                System.out.println("Course: "+ CourseCode+ " Inserted in the course table");
+            }
+            else{
+                System.out.println("Course: "+ CourseCode+ " Not inserted in the table");
+                System.out.println("Method: CreateCourse, Class: AdminDAO");
+            }
+            return Is_Inserted;
         }
         catch(Exception e){
             e.printStackTrace();
+            System.out.println("Some failure occurred in CreateCourse");
             return false;
         }
     }
 
-    public List<Course> getAllCourses() {
-        List<Course> courses = new ArrayList<>();
-        String sql = "SELECT CourseID, CourseCode, CourseTitle, Credits FROM Course";
-        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                courses.add(new Course(rs.getInt("CourseID"), rs.getString("CourseCode"), rs.getString("CourseTitle"), rs.getInt("Credits")));
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        return courses;
-    }
 
-    /**
-     * Fetches all instructors from the DB to populate a JComboBox.
-     */
-    public List<Instructor> getAllInstructors() {
-        List<Instructor> instructors = new ArrayList<>();
-        String sql = "SELECT InstructorID, FullName, Email FROM Instructors";
-        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                instructors.add(new Instructor(rs.getInt("InstructorID"), rs.getString("FullName"), rs.getString("Email")));
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        return instructors;
-    }
-
-    //This adds a new course to the course table in StudentDB
-    public boolean CreateSection(int courseId, int instructorId, String sectionNum, String time, int capacity) {
+    //This method creates a new section into the section table in the StudentDB
+    public boolean CreateSection(int CourseID, int InstructorID, String SectionNum, String Time, int Capacity) {
         String sql = "INSERT INTO Sections (CourseID, InstructorID, SectionNumber, TimeSlot, Capacity, EnrolledCount) " + "VALUES (?, ?, ?, ?, ?, 0)"; // Default EnrolledCount to 0
-        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, courseId);
-            stmt.setInt(2, instructorId);
-            stmt.setString(3, sectionNum);
-            stmt.setString(4, time);
-            stmt.setInt(5, capacity);
-            return stmt.executeUpdate() > 0;
+        try (Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(sql)) {
+            Statement.setInt(1, CourseID);
+            Statement.setInt(2, InstructorID);
+            Statement.setString(3, SectionNum);
+            Statement.setString(4, Time);
+            Statement.setInt(5, Capacity);
+            boolean Is_Inserted = Statement.executeUpdate()>0;
+            if(Is_Inserted){
+                System.out.println("Section: "+CourseID+"-"+SectionNum +" Inserted in the section table");
+            }
+            else{
+                System.out.println("Section: "+CourseID+"-"+SectionNum+" Not Inserted in the table");
+                System.out.println("Method: CreateSection, Class: AdminDAO");
+            }
+            return Is_Inserted;
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.out.println("Some failute occures in CreateSection");
             return false;
         }
     }
 
-    public List<ProfileInfo> GetAllStudentProfiles() {
-        List<ProfileInfo> profiles = new ArrayList<>();
-        String sql = "SELECT UserID, FullName FROM Students";
-        try (Connection conn = DatabaseUtil.GetStudentConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
 
-            while (rs.next()) {
-                profiles.add(new ProfileInfo(
-                        rs.getInt("UserID"),
-                        rs.getString("FullName")
-                ));
+    //This function basically lists all the courses in the Courses table of the StudentDB
+    //This is used to list all the courses somewhere in the dropdown of sectionManagementPanel
+    //The ArrayList is of Course that has same values as the columns of the course table in StudentDB
+    //But it is not directly in the dropdown, it is first used in AdminService
+    public List<Course> GetAllCourses() {
+        List<Course> Courses = new ArrayList<>();
+        String SQL = "SELECT CourseID, CourseCode, CourseTitle, Credits FROM Course";
+        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = conn.prepareStatement(SQL); ResultSet Result = Statement.executeQuery()) {
+            while (Result.next()) {
+                Courses.add(new Course(Result.getInt("CourseID"), Result.getString("CourseCode"), Result.getString("CourseTitle"), Result.getInt("Credits")));
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error in Method: GetAllCourses, Method: AdminDAO");
+        }
+        return Courses;
+    }
+
+
+    //This function basically returns an ArrayList of all the instructors that is taken from the Instructors
+    //It is also used in the dropdown of the SectionManagementPanel but not directly, it is first called in the AdminService
+    public List<Instructor> GetAllInstructors() {
+        List<Instructor> Instructors = new ArrayList<>();
+        String SQL = "SELECT InstructorID, FullName, Email FROM Instructors";
+        try (Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL); ResultSet Result = Statement.executeQuery()) {
+            while (Result.next()) {
+                Instructors.add(new Instructor(Result.getInt("InstructorID"), Result.getString("FullName"), Result.getString("Email")));
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error in Method: GetAllInstructors");
+        }
+        return Instructors;
+    }
+
+
+    //This method returns the StudentProfiles of the all students in the Students table in the StudentDB
+    //The record ProfileInfo basically contains all the fields that are the same as the columns of that table
+    public List<ProfileInfo> GetAllStudentProfiles() {
+        List<ProfileInfo> Profiles = new ArrayList<>();
+        String sql = "SELECT UserID, FullName FROM Students";
+        try (Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(sql); ResultSet Result = Statement.executeQuery()) {
+            while (Result.next()) {
+                Profiles.add(new ProfileInfo(Result.getInt("UserID"), Result.getString("FullName")));
+            }
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
-        return profiles;
+        return Profiles;
+    }
+
+
+    //This does the same as the above method but for instructors
+    public List<ProfileInfo> GetAllInstructorProfiles() {
+        List<ProfileInfo> Profiles = new ArrayList<>();
+        String SQL = "SELECT UserID, FullName FROM Instructors";
+        try (Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL); ResultSet Result = Statement.executeQuery()) {
+            while (Result.next()) {
+                Profiles.add(new ProfileInfo(Result.getInt("UserID"), Result.getString("FullName")));
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Profiles;
     }
 
     /**
-     * NEW METHOD: Fetches all instructor profiles.
+     * NEW METHOD: Fetches all sections for the admin panel table.
      */
-    public List<ProfileInfo> GetAllInstructorProfiles() {
-        List<ProfileInfo> profiles = new ArrayList<>();
-        String sql = "SELECT UserID, FullName FROM Instructors";
+    public List<AdminSectionView> getAllSectionsForView() {
+        List<AdminSectionView> sections = new ArrayList<>();
+        // This query joins all 3 tables
+        String sql = """
+            SELECT c.CourseCode, s.SectionNumber, s.TimeSlot, s.EnrolledCount, s.Capacity, i.FullName
+            FROM Sections s
+            JOIN Course c ON s.CourseID = c.CourseID
+            LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
+            ORDER BY c.CourseCode, s.SectionNumber
+            """;
+
         try (Connection conn = DatabaseUtil.GetStudentConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                profiles.add(new ProfileInfo(
-                        rs.getInt("UserID"),
-                        rs.getString("FullName")
+                sections.add(new AdminSectionView(
+                        rs.getString("CourseCode"),
+                        rs.getString("SectionNumber"),
+                        rs.getString("TimeSlot"),
+                        rs.getInt("EnrolledCount") + " / " + rs.getInt("Capacity"),
+                        rs.getString("FullName") != null ? rs.getString("FullName") : "TBA"
                 ));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return profiles;
+        return sections;
     }
 }
 

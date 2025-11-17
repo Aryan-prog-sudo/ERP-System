@@ -77,9 +77,26 @@ public class Main extends JFrame {
         Runnable showGrades = () -> cardLayout.show(mainPanel, "grades");
         Runnable showInstructorHome = () -> cardLayout.show(mainPanel, "my_sections");
         Consumer<Integer> showGradebookForSection = (sectionId) -> {
-            gradebookPanel.loadGradebook(sectionId);
-        };
-        Runnable showAdminHome = () -> cardLayout.show(mainPanel, "admin_dashboard");
+            try {
+                System.out.println("Attempting to load gradebook for section: " + sectionId);
+                gradebookPanel.loadGradebook(sectionId); // 1. Try to load data
+
+                System.out.println("Data loaded. Attempting to show 'gradebook' card...");
+                cardLayout.show(mainPanel, "gradebook"); // 2. Try to show panel
+
+                System.out.println("Card switch successful.");
+
+            } catch (Exception e) {
+                // 3. If anything fails, show an error and print the details
+                System.err.println("--- FATAL ERROR: Could not open gradebook! ---");
+                e.printStackTrace(); // THIS WILL TELL US THE EXACT BUG
+
+                JOptionPane.showMessageDialog(mainPanel,
+                        "Could not open gradebook. An internal error occurred:\n" + e.getMessage(),
+                        "Panel Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        };        Runnable showAdminHome = () -> cardLayout.show(mainPanel, "admin_dashboard");
         Runnable showUserManagement = () -> cardLayout.show(mainPanel, "admin_users");
         Runnable showCourseManagement = () -> cardLayout.show(mainPanel, "admin_courses");
         Runnable showSectionManagement = () -> cardLayout.show(mainPanel, "admin_sections");
@@ -111,37 +128,66 @@ public class Main extends JFrame {
     /**
      * UPDATED: Now accepts the REAL UserID from LoginDialog.
      */
+    /**
+     * UPDATED: Now uses the DAO to look up the REAL StudentID/InstructorID
+     * from the UserID provided by the AuthDB. (TYPO FIXED)
+     */
     public void onLoginSuccess(String role, String username, int userId) {
 
-        // --- NO MORE FAKE IDs ---
         this.loggedInUserEmail = username;
-        this.loggedInUserId = userId; // Store the real ID
+        this.loggedInUserId = userId; // This is the UserID from AuthDB
 
         String displayName = "User";
-        String dashboardName = "student_dashboard";
+        String dashboardName = "student_dashboard"; // Default
 
         // --- TODO: This should call a service to get profile info ---
         // e.g., String name = studentService.getStudentName(userId);
 
         if ("student".equalsIgnoreCase(role)) {
-            displayName = "John Student"; // Placeholder name
-            studentService.setCurrentStudent(userId); // <-- Set the ID in the service
+
+            // --- FIX FOR STUDENT ---
+            int studentId = studentDAO.getStudentIdFromUserId(userId);
+            if (studentId == -1) {
+                JOptionPane.showMessageDialog(this, "Login failed: No student profile found for this user.", "Login Error", JOptionPane.ERROR_MESSAGE);
+                // Go back to login
+                // Note: You might need to make showLoginDialog non-static to call this
+                // For now, we'll just prevent login.
+                return;
+            }
+
+            displayName = "Student"; // Placeholder
+            studentService.setCurrentStudent(studentId); // <-- Set the REAL StudentID
             dashboardName = "student_dashboard";
+
         } else if ("instructor".equalsIgnoreCase(role)) {
-            displayName = "Dr. Sarah Professor"; // Placeholder name
-            instructorService.setCurrentInstructor(userId); // <-- Set the ID in the service
-            dashboardName = "my_sections";
+
+            // --- FIX FOR INSTRUCTOR ---
+            int instructorId = instructorDAO.getInstructorIdFromUserId(userId);
+            // The typo was here
+            if (instructorId == -1) {
+                JOptionPane.showMessageDialog(this, "Login failed: No instructor profile found for this user.", "Login Error", JOptionPane.ERROR_MESSAGE);
+                // Go back to login
+                return;
+            }
+
+            displayName = "Instructor"; // Placeholder
+            instructorService.setCurrentInstructor(instructorId); // <-- Set the REAL InstructorID
+            dashboardName = "my_sections"; // Instructor dashboard
+
         } else if ("admin".equalsIgnoreCase(role)) {
-            displayName = "Admin User"; // Placeholder name
+            displayName = "Admin User";
             dashboardName = "admin_dashboard";
         }
 
-        welcomeLabel.setText("Welcome, " + displayName + "  ");
+        // TODO: Use the ID to fetch the user's FullName from the StudentDB
+        // and set it on the welcomeLabel.
+        // String realName = ...
+        // welcomeLabel.setText("Welcome, " + realName + "  ");
+        welcomeLabel.setText("Welcome, " + displayName + "  "); // Using placeholder
+
         cardLayout.show(mainPanel, dashboardName);
         this.setVisible(true);
-    }
-
-    // ... (createMainMenuBar is the same, it already works) ...
+    }    // ... (createMainMenuBar is the same, it already works) ...
     private JMenuBar createMainMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(Box.createHorizontalGlue());

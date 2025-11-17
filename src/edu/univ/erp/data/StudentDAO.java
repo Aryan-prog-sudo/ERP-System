@@ -20,7 +20,7 @@ public class StudentDAO {
         // This is a complex query that joins 4 tables
         String sql = """
             SELECT 
-                s.SectionID, c.CourseCode, c.CourseTitle, i.FullName, s.TimeSlot, s.EnrolledCount, s.Capacity,
+                s.SectionID, c.CourseCode, c.CourseTitle, c.Credits, i.FullName, s.TimeSlot, s.EnrolledCount, s.Capacity,
                 (SELECT COUNT(*) FROM Enrollments e WHERE e.SectionID = s.SectionID AND e.StudentID = ?) AS IsEnrolled
             FROM Sections s
             JOIN Course c ON s.CourseID = c.CourseID
@@ -34,6 +34,7 @@ public class StudentDAO {
                             rs.getInt("SectionID"),
                             rs.getString("CourseCode"),
                             rs.getString("CourseTitle"),
+                            rs.getInt("Credits"),
                             rs.getString("FullName") != null ? rs.getString("FullName") : "TBA",
                             rs.getString("TimeSlot"),
                             rs.getInt("EnrolledCount"),
@@ -83,16 +84,28 @@ public class StudentDAO {
     }
 
     //This code fetches the grades of the student
+    /**
+     * UPDATED: Fetches a student's grades.
+     * This query now starts from Enrollments and LEFT JOINs Grades
+     * to show courses even if they are still "In Progress".
+     */
     public List<Grade> getGrades(int studentId) {
         List<Grade> grades = new ArrayList<>();
+        // --- THIS IS THE FIXED QUERY ---
         String sql = """
-            SELECT c.CourseCode, c.CourseTitle, c.Credits, g.FinalGrade
-            FROM Grades g
-            JOIN Sections s ON g.SectionID = s.SectionID
+            SELECT 
+                c.CourseCode, c.CourseTitle, c.Credits, g.FinalGrade
+            FROM Enrollments e
+            JOIN Sections s ON e.SectionID = s.SectionID
             JOIN Course c ON s.CourseID = c.CourseID
-            WHERE g.StudentID = ?
+            LEFT JOIN Grades g ON e.StudentID = g.StudentID AND e.SectionID = g.SectionID
+            WHERE e.StudentID = ?
             """;
-        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        // --- END OF FIX ---
+
+        try (Connection conn = DatabaseUtil.GetStudentConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, studentId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -100,14 +113,35 @@ public class StudentDAO {
                             rs.getString("CourseCode"),
                             rs.getString("CourseTitle"),
                             rs.getInt("Credits"),
+                            // This logic correctly handles NULL grades
                             rs.getString("FinalGrade") != null ? rs.getString("FinalGrade") : "In Progress"
                     ));
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return grades;
+    }
+
+    /**
+     * NEW METHOD: Finds the Student's PRIMARY KEY (StudentID)
+     * using their foreign key (UserID from AuthDB).
+     */
+    public int getStudentIdFromUserId(int userId) {
+        String sql = "SELECT StudentID FROM Students WHERE UserID = ?";
+        try (Connection conn = DatabaseUtil.GetStudentConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("StudentID");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1; // Not found
     }
 }

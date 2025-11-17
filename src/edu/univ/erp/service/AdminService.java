@@ -1,20 +1,21 @@
 package edu.univ.erp.service;
 
 import edu.univ.erp.auth.UserDAO;
-import edu.univ.erp.auth.AuthUserInfo; // <-- NEW IMPORT
+import edu.univ.erp.auth.AuthUserInfo;
 import edu.univ.erp.data.AdminDAO;
-import edu.univ.erp.data.ProfileInfo; // <-- NEW IMPORT
+import edu.univ.erp.data.ProfileInfo;
 import edu.univ.erp.data.SettingsDAO;
-import edu.univ.erp.domain.UserView; // <-- NEW IMPORT
+import edu.univ.erp.domain.UserView;
 import edu.univ.erp.util.DatabaseUtil;
 import edu.univ.erp.domain.Course;
 import edu.univ.erp.domain.Instructor;
+import edu.univ.erp.domain.AdminSectionView;
 
 import java.sql.Connection;
-import java.util.ArrayList; // <-- NEW IMPORT
-import java.util.HashMap; // <-- NEW IMPORT
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map; // <-- NEW IMPORT
+import java.util.Map;
 import java.util.logging.Logger;
 
 //This class basically controls all the logic inside the admin pages
@@ -125,12 +126,12 @@ public class AdminService {
 
     //This just lists down all the courses for the dropdown panel
     public List<Course> getAllCourses() {
-        return adminDAO.getAllCourses();
+        return adminDAO.GetAllCourses();
     }
 
     //This just lists down all the instructors for the dropdown panel
     public List<Instructor> getAllInstructors() {
-        return adminDAO.getAllInstructors();
+        return adminDAO.GetAllInstructors();
     }
 
 
@@ -189,5 +190,12 @@ public class AdminService {
             allUsers.add(new UserView(fullName, authUser.email(), authUser.role()));
         }
         return allUsers;
+    }
+
+    /**
+     * NEW METHOD: Gets all sections for the UI table.
+     */
+    public List<AdminSectionView> getAllSectionsForView() {
+        return adminDAO.getAllSectionsForView();
     }
 }

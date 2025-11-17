@@ -8,6 +8,7 @@ public record SectionView(
         int sectionId,
         String courseCode,
         String courseTitle,
+        int credits,
         String instructorName,
         String timeSlot,
         int enrolled,

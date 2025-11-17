@@ -6,6 +6,8 @@ import edu.univ.erp.domain.GradebookEntry;
 import edu.univ.erp.domain.SectionView;
 
 import java.text.DecimalFormat;
+import com.opencsv.CSVWriter;
+import java.io.Writer;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -89,5 +91,38 @@ public class InstructorService {
         if (score >= 60) return "D";
         if (score < 0) return "-"; // Not graded yet
         return "F";
+    }
+
+    /**
+     * NEW METHOD: Fetches the gradebook data and writes it to a CSV.
+     * This will be called by the UI.
+     */
+    public void exportGradebookToCsv(int sectionId, Writer writer) throws Exception {
+
+        // 1. Get the data (we already have a method for this)
+        List<GradebookEntry> gradebook = getGradebook(sectionId);
+
+        // 2. Use CSVWriter to write the data
+        try (CSVWriter csvWriter = new CSVWriter(writer)) {
+
+            // 3. Write the header row
+            csvWriter.writeNext(new String[]{
+                    "Student ID", "Student Name", "Quiz Score",
+                    "Midterm Score", "Final Score", "Final Grade"
+            });
+
+            // 4. Write all data rows
+            for (GradebookEntry entry : gradebook) {
+                csvWriter.writeNext(new String[]{
+                        String.valueOf(entry.studentId()),
+                        entry.studentName(),
+                        String.valueOf(entry.quizScore()),
+                        String.valueOf(entry.midtermScore()),
+                        String.valueOf(entry.finalScore()),
+                        entry.finalGrade() != null ? entry.finalGrade() : "" // Handle null grades
+                });
+            }
+        }
+        // Let the exception bubble up to the UI to be handled
     }
 }

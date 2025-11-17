@@ -6,34 +6,44 @@ import edu.univ.erp.service.TranscriptService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.List;
 
 /**
  * Grades Panel.
- * UPDATED: Now calls StudentService and TranscriptService.
+ * UPDATED: Beautified with a modern look and feel.
  */
 public class GradesPanel extends JPanel {
+
+    // --- Color Theme ---
+    private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
+    private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
+    private static final Color COLOR_BACKGROUND = Color.WHITE;
+    private static final Color COLOR_TEXT_DARK = new Color(30, 30, 30);
+    private static final Color COLOR_TEXT_LIGHT = new Color(140, 140, 140);
+    private static final Color COLOR_BORDER = new Color(220, 220, 220);
 
     private JTable gradesTable;
     private DefaultTableModel tableModel;
     private StudentService studentService;
     private TranscriptService transcriptService;
 
-    // 1. Constructor updated to accept both services
     public GradesPanel(Runnable onGoBack, StudentService studentService, TranscriptService transcriptService) {
         this.studentService = studentService;
         this.transcriptService = transcriptService;
 
         setLayout(new BorderLayout(0, 15));
+        setBackground(COLOR_BACKGROUND);
         setBorder(new EmptyBorder(20, 40, 40, 40));
         add(createHeaderPanel(onGoBack), BorderLayout.NORTH);
         add(createTablePanel(), BorderLayout.CENTER);
 
-        // 2. Load data immediately
         loadData();
     }
 
@@ -41,6 +51,7 @@ public class GradesPanel extends JPanel {
      * 3. New method to fetch data from the service
      */
     private void loadData() {
+        // This will now work correctly thanks to the DAO fix
         List<Grade> grades = studentService.getGrades();
         tableModel.setRowCount(0); // Clear table
         for (Grade grade : grades) {
@@ -53,52 +64,67 @@ public class GradesPanel extends JPanel {
         }
     }
 
+    /**
+     * UPDATED: createHeaderPanel, now styled
+     */
     private JPanel createHeaderPanel(Runnable onGoBack) {
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        JButton goBackButton = new JButton("← Go Back");
-        goBackButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        JPanel headerPanel = new JPanel(new BorderLayout(20, 0));
+        headerPanel.setBackground(COLOR_BACKGROUND);
+
+        JButton goBackButton = createModernButton("← Go Back", false);
         goBackButton.addActionListener(e -> onGoBack.run());
-        goBackButton.setBorderPainted(false);
-        goBackButton.setContentAreaFilled(false);
-        goBackButton.setForeground(Color.BLUE.darker());
-        goBackButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         JLabel titleLabel = new JLabel("My Grades");
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
+        titleLabel.setForeground(COLOR_TEXT_DARK);
         titleLabel.setHorizontalAlignment(JLabel.CENTER);
 
-        // 4. Download Transcript Button (now functional)
-        JButton downloadButton = new JButton("Download Transcript (CSV)");
-        downloadButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        downloadButton.setBackground(new Color(0, 82, 204));
-        downloadButton.setForeground(Color.WHITE);
+        // A panel to hold the two right-side buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        buttonPanel.setOpaque(false);
+
+        JButton refreshButton = createModernButton("Refresh", false);
+        refreshButton.addActionListener(e -> loadData());
+
+        JButton downloadButton = createModernButton("Download Transcript (CSV)", true);
         downloadButton.addActionListener(e -> onDownloadTranscript());
+
+        buttonPanel.add(refreshButton);
+        buttonPanel.add(downloadButton);
 
         headerPanel.add(goBackButton, BorderLayout.WEST);
         headerPanel.add(titleLabel, BorderLayout.CENTER);
-        headerPanel.add(downloadButton, BorderLayout.EAST);
+        headerPanel.add(buttonPanel, BorderLayout.EAST);
 
         return headerPanel;
     }
 
+    /**
+     * UPDATED: createTablePanel, now styled
+     */
     private JScrollPane createTablePanel() {
         String[] columnNames = {"Course Code", "Title", "Credits", "Grade"};
-        tableModel = new DefaultTableModel(null, columnNames) { // Start with no data
+        tableModel = new DefaultTableModel(null, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
+
         gradesTable = new JTable(tableModel);
         gradesTable.setFont(new Font("SansSerif", Font.PLAIN, 14));
         gradesTable.setRowHeight(35);
         gradesTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
-        return new JScrollPane(gradesTable);
+        gradesTable.setGridColor(COLOR_BORDER);
+        gradesTable.setIntercellSpacing(new Dimension(0, 0));
+
+        JScrollPane scrollPane = new JScrollPane(gradesTable);
+        scrollPane.setBorder(new LineBorder(COLOR_BORDER));
+        return scrollPane;
     }
 
     /**
-     * 5. NEW: Logic for the "Download Transcript" button (Bonus Feature)
-     * This fixes your 'getCurrentStudentId' error.
+     * Logic for the "Download Transcript" button (Functionality unchanged)
      */
     private void onDownloadTranscript() {
         JFileChooser fileChooser = new JFileChooser();
@@ -109,11 +135,7 @@ public class GradesPanel extends JPanel {
             File fileToSave = fileChooser.getSelectedFile();
             try (FileWriter writer = new FileWriter(fileToSave)) {
 
-                // --- REAL BACKEND CALL ---
-                // Get the student's ID (which the service knows)
                 int studentId = studentService.getCurrentStudentId();
-
-                // Call the transcript service
                 transcriptService.generateCsvTranscript(studentId, writer);
 
                 JOptionPane.showMessageDialog(this, "Transcript saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -122,5 +144,36 @@ public class GradesPanel extends JPanel {
                 ex.printStackTrace();
             }
         }
+    }
+
+    // --- Helper Method for Styling ---
+
+    private JButton createModernButton(String text, boolean isPrimary) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("SansSerif", Font.BOLD, 14));
+        button.setOpaque(true);
+        button.setPreferredSize(new Dimension(button.getPreferredSize().width, 40));
+        button.setBorder(new EmptyBorder(5, 15, 5, 15));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        Color bg = isPrimary ? COLOR_PRIMARY : COLOR_BACKGROUND;
+        Color fg = isPrimary ? Color.WHITE : COLOR_TEXT_DARK;
+        Color bgHover = isPrimary ? COLOR_PRIMARY_DARK : new Color(240, 240, 240);
+
+        button.setBackground(bg);
+        button.setForeground(fg);
+        if (!isPrimary) {
+            button.setBorder(new LineBorder(COLOR_BORDER, 1));
+        }
+
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
+                button.setBackground(bgHover);
+            }
+            public void mouseExited(MouseEvent evt) {
+                button.setBackground(bg);
+            }
+        });
+        return button;
     }
 }
