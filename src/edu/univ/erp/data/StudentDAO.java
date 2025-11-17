@@ -11,18 +11,13 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Handles all database operations for the Student role from StudentDB.
- */
+//This class handes all the operations for the Student User in the StudentDBw
 public class StudentDAO {
-
-    /**
-     * Fetches all sections for the Course Catalog.
-     * It also checks which ones the *current* student is enrolled in.
-     */
+    //This method fetches all the sections for the course catalog
+    //It also checks if the student is enrolled in the course
     public List<SectionView> getAvailableSections(int studentId) {
         List<SectionView> sections = new ArrayList<>();
-        // This is a complex query that joins 4 tables!
+        // This is a complex query that joins 4 tables
         String sql = """
             SELECT 
                 s.SectionID, c.CourseCode, c.CourseTitle, i.FullName, s.TimeSlot, s.EnrolledCount, s.Capacity,
@@ -31,10 +26,7 @@ public class StudentDAO {
             JOIN Course c ON s.CourseID = c.CourseID
             LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
             """;
-
-        try (Connection conn = DatabaseUtil.GetStudentConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, studentId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -72,9 +64,7 @@ public class StudentDAO {
         // Note: I've hardcoded Location as 'TBA'.
         // You would need to add a Location column to your Sections table to fix this.
 
-        try (Connection conn = DatabaseUtil.GetStudentConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, studentId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -92,9 +82,7 @@ public class StudentDAO {
         return timetable;
     }
 
-    /**
-     * Fetches a student's final grades.
-     */
+    //This code fetches the grades of the student
     public List<Grade> getGrades(int studentId) {
         List<Grade> grades = new ArrayList<>();
         String sql = """
@@ -104,10 +92,7 @@ public class StudentDAO {
             JOIN Course c ON s.CourseID = c.CourseID
             WHERE g.StudentID = ?
             """;
-
-        try (Connection conn = DatabaseUtil.GetStudentConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, studentId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -119,7 +104,8 @@ public class StudentDAO {
                     ));
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         return grades;

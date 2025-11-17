@@ -108,6 +108,7 @@ public class StudentService {
         }
     }
 
+
     public String dropSection(int sectionId) {
         // ... (method is the same as before) ...
         if (settingsDAO.IsMaintenanceModeOn()) {

@@ -24,6 +24,7 @@ public class SettingsDAO {
         }
     }
 
+
     public boolean SetMaintenanceMode(boolean is_on){
         String SQL = "UPDATE SystemSettings SET SettingValue = ? WHERE SettingKey = 'MaintenanceMode'";
         try(Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)){

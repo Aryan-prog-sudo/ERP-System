@@ -10,9 +10,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Handles all database operations for the Instructor role from StudentDB.
- */
+//This class handles the Instructor action for the Instruction Table in StudentDB
 public class InstructorDAO {
 
     /**

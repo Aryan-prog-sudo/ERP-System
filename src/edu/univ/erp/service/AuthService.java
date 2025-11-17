@@ -6,10 +6,9 @@ import edu.univ.erp.data.SettingsDAO;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+
 public class AuthService {
-
     private static final Logger logger = Logger.getLogger(AuthService.class.getName());
-
     private UserDAO userDAO;
     private SettingsDAO settingsDAO;
 

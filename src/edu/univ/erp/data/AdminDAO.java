@@ -7,9 +7,9 @@ import edu.univ.erp.util.DatabaseUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet; // <-- NEW IMPORT
-import java.util.ArrayList; // <-- NEW IMPORT
-import java.util.List; // <-- NEW IMPORT
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import edu.univ.erp.domain.Course;
 import edu.univ.erp.domain.Instructor;
 import edu.univ.erp.util.DatabaseUtil;
@@ -18,19 +18,23 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-//This class handles the connection to the StudentDB
 
+
+//This class handles the connection to the StudentDB
 public class AdminDAO {
+    //This methods adds the student profile to the students table in the StudentDB
     public boolean CreateStudentProfile(Connection StudentDBConnection, int UserID, String FullName, String Email) throws Exception{
         String SQL = "INSERT INTO Students (UserID, FullName, Email) VALUES (?,?,?)";
         try(PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)){
             Statement.setInt(1,UserID);
             Statement.setString(2, FullName);
             Statement.setString(3, Email);
-            return Statement.executeUpdate()>0; //This returns true if row was inserted in the table Students
+            return Statement.executeUpdate()>0;
+            //This returns true if row was inserted in the table Students
         }
     }
 
+    //This method adds the instructor profile to the instructor table in the StudentDB
     public boolean CreateInstructorProfile(Connection StudentDBConnection, int UserID, String FullName, String Email) throws Exception{
         String SQL = "INSERT INTO Instructors (UserID, FullName, Email, Department) VALUES (?, ?, ?, ?)";
         try(PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)){
@@ -42,6 +46,7 @@ public class AdminDAO {
         }
     }
 
+    //This adds a new course to the course table in the  StudentDB
     public boolean CreateCourse(String Code, String Title, int Credits){
         String SQL = "INSERT INTO Course (CourseCode, CourseTitle, Credits) VALUES (?, ?, ?)";
         try(Connection StudentDBConnection = edu.univ.erp.util.DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)){
@@ -59,69 +64,90 @@ public class AdminDAO {
     public List<Course> getAllCourses() {
         List<Course> courses = new ArrayList<>();
         String sql = "SELECT CourseID, CourseCode, CourseTitle, Credits FROM Course";
-
-        try (Connection conn = DatabaseUtil.GetStudentConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
+        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                courses.add(new Course(
-                        rs.getInt("CourseID"),
-                        rs.getString("CourseCode"),
-                        rs.getString("CourseTitle"),
-                        rs.getInt("Credits")
-                ));
+                courses.add(new Course(rs.getInt("CourseID"), rs.getString("CourseCode"), rs.getString("CourseTitle"), rs.getInt("Credits")));
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         return courses;
     }
 
-    // --- NEW METHOD 2 ---
     /**
      * Fetches all instructors from the DB to populate a JComboBox.
      */
     public List<Instructor> getAllInstructors() {
         List<Instructor> instructors = new ArrayList<>();
         String sql = "SELECT InstructorID, FullName, Email FROM Instructors";
-
-        try (Connection conn = DatabaseUtil.GetStudentConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
+        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                instructors.add(new Instructor(
-                        rs.getInt("InstructorID"),
-                        rs.getString("FullName"),
-                        rs.getString("Email")
-                ));
+                instructors.add(new Instructor(rs.getInt("InstructorID"), rs.getString("FullName"), rs.getString("Email")));
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         return instructors;
     }
 
+    //This adds a new course to the course table in StudentDB
     public boolean CreateSection(int courseId, int instructorId, String sectionNum, String time, int capacity) {
-        String sql = "INSERT INTO Sections (CourseID, InstructorID, SectionNumber, TimeSlot, Capacity, EnrolledCount) " +
-                "VALUES (?, ?, ?, ?, ?, 0)"; // Default EnrolledCount to 0
-
-        try (Connection conn = DatabaseUtil.GetStudentConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        String sql = "INSERT INTO Sections (CourseID, InstructorID, SectionNumber, TimeSlot, Capacity, EnrolledCount) " + "VALUES (?, ?, ?, ?, ?, 0)"; // Default EnrolledCount to 0
+        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, courseId);
             stmt.setInt(2, instructorId);
             stmt.setString(3, sectionNum);
             stmt.setString(4, time);
             stmt.setInt(5, capacity);
-
             return stmt.executeUpdate() > 0;
-
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public List<ProfileInfo> GetAllStudentProfiles() {
+        List<ProfileInfo> profiles = new ArrayList<>();
+        String sql = "SELECT UserID, FullName FROM Students";
+        try (Connection conn = DatabaseUtil.GetStudentConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                profiles.add(new ProfileInfo(
+                        rs.getInt("UserID"),
+                        rs.getString("FullName")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return profiles;
+    }
+
+    /**
+     * NEW METHOD: Fetches all instructor profiles.
+     */
+    public List<ProfileInfo> GetAllInstructorProfiles() {
+        List<ProfileInfo> profiles = new ArrayList<>();
+        String sql = "SELECT UserID, FullName FROM Instructors";
+        try (Connection conn = DatabaseUtil.GetStudentConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                profiles.add(new ProfileInfo(
+                        rs.getInt("UserID"),
+                        rs.getString("FullName")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return profiles;
     }
 }
 

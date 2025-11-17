@@ -1,9 +1,7 @@
 package edu.univ.erp.auth;
 
-/**
- * A simple data-holder to return two values from the UserDAO.
- * We can use a 'record' for this.
- */
+//This basically holds the values returned by the UserDAO
+//The UserDAO returns value in this format
 public record AuthResult(
         int userId,
         String role
