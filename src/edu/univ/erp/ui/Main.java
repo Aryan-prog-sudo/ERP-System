@@ -62,7 +62,7 @@ public class Main extends JFrame {
         setMinimumSize(new Dimension(1024, 768));
         setLocationRelativeTo(null);
 
-        // --- 1. INSTANTIATE BACKEND ---
+        //Create instances of all the backends
         this.userDAO = new UserDAO();
         this.adminDAO = new AdminDAO();
         this.settingsDAO = new SettingsDAO();
@@ -100,7 +100,8 @@ public class Main extends JFrame {
                 System.out.println("Attempting to load gradebook for section: " + sectionId);
                 gradebookPanel.loadGradebook(sectionId);
                 cardLayout.show(mainPanel, "gradebook");
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(mainPanel,
                         "Could not open gradebook. An internal error occurred:\n" + e.getMessage(),
