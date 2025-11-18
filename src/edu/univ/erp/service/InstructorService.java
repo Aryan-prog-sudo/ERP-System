@@ -16,10 +16,8 @@ import java.util.logging.Logger;
  */
 public class InstructorService {
     private static final Logger logger = Logger.getLogger(InstructorService.class.getName());
-
     private InstructorDAO instructorDAO;
     private SettingsDAO settingsDAO;
-
     private int currentInstructorId;
 
     public InstructorService(InstructorDAO instructorDAO, SettingsDAO settingsDAO) {
@@ -27,14 +25,17 @@ public class InstructorService {
         this.settingsDAO = settingsDAO;
     }
 
+
     // This method will be called by Main after login
     public void setCurrentInstructor(int instructorId) {
         this.currentInstructorId = instructorId;
     }
 
+
     public List<SectionView> getAssignedSections() {
         return instructorDAO.getAssignedSections(this.currentInstructorId);
     }
+
 
     public List<GradebookEntry> getGradebook(int sectionId) {
         // TODO: Add a check here to ensure this.currentInstructorId
@@ -46,22 +47,18 @@ public class InstructorService {
      * Calculates the final grade and saves all scores.
      * This includes the bonus logic for grade calculation.
      */
+    //This function basically calculates the final grade and saves all the grades into the database
     public boolean saveAndCalculateGrades(int sectionId, List<GradebookEntry> gradebook) {
-        // --- GUARD CLAUSE (Bonus Feature) ---
         if (settingsDAO.IsMaintenanceModeOn()) {
             logger.warning("Grade update failed: System is in Maintenance Mode.");
             return false;
         }
-
         try {
             for (GradebookEntry entry : gradebook) {
                 // --- Business Logic (Bonus) ---
                 // Per your design, weights are 20% quiz, 30% midterm, 50% final
-                double finalScore = (entry.quizScore() * 0.20) +
-                        (entry.midtermScore() * 0.30) +
-                        (entry.finalScore() * 0.50);
-
-                String finalGrade = calculateLetterGrade(finalScore);
+                double finalScore = (entry.quizScore() * 0.20) + (entry.midtermScore() * 0.30) + (entry.finalScore() * 0.50);
+                String finalGrade = CalculateLetterGrade(finalScore);
 
                 // Now, call the DAO to save everything
                 instructorDAO.updateGrade(
@@ -75,30 +72,27 @@ public class InstructorService {
             }
             logger.info("Grades successfully updated for section " + sectionId);
             return true;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    /**
-     * Helper method to convert a numeric score to a letter grade.
-     */
-    private String calculateLetterGrade(double score) {
-        if (score >= 90) return "A";
-        if (score >= 80) return "B";
-        if (score >= 70) return "C";
-        if (score >= 60) return "D";
-        if (score < 0) return "-"; // Not graded yet
+
+    //Used to convert grades to LetterGrade
+    private String CalculateLetterGrade(double Score) {
+        if (Score >= 90) return "A";
+        if (Score >= 80) return "B";
+        if (Score >= 70) return "C";
+        if (Score >= 60) return "D";
+        if (Score < 0) return "-";
         return "F";
     }
 
-    /**
-     * NEW METHOD: Fetches the gradebook data and writes it to a CSV.
-     * This will be called by the UI.
-     */
-    public void exportGradebookToCsv(int sectionId, Writer writer) throws Exception {
 
+    //This method fetches all the gradebook data and writes it into the CSV
+    public void exportGradebookToCsv(int sectionId, Writer writer) throws Exception {
         // 1. Get the data (we already have a method for this)
         List<GradebookEntry> gradebook = getGradebook(sectionId);
 
@@ -125,4 +119,10 @@ public class InstructorService {
         }
         // Let the exception bubble up to the UI to be handled
     }
+
+    //This would be added to the UI panel to prevent the user from even writing in the columns for grade
+    public boolean SystemInMaintenance(){
+        return settingsDAO.IsMaintenanceModeOn();
+    }
+
 }

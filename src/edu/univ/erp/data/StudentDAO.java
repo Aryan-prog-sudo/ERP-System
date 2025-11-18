@@ -83,9 +83,9 @@ public class StudentDAO {
         return timetable;
     }
 
+
     //This code fetches the grades of the student
     /**
-     * UPDATED: Fetches a student's grades.
      * This query now starts from Enrollments and LEFT JOINs Grades
      * to show courses even if they are still "In Progress".
      */
@@ -124,10 +124,9 @@ public class StudentDAO {
         return grades;
     }
 
-    /**
-     * NEW METHOD: Finds the Student's PRIMARY KEY (StudentID)
-     * using their foreign key (UserID from AuthDB).
-     */
+
+    //This method finds the StudentID using the UserID
+    //The StudentID is in the Student Table while the UserID is in the User table
     public int getStudentIdFromUserId(int userId) {
         String sql = "SELECT StudentID FROM Students WHERE UserID = ?";
         try (Connection conn = DatabaseUtil.GetStudentConnection();

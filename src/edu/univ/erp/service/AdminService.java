@@ -10,6 +10,7 @@ import edu.univ.erp.util.DatabaseUtil;
 import edu.univ.erp.domain.Course;
 import edu.univ.erp.domain.Instructor;
 import edu.univ.erp.domain.AdminSectionView;
+import edu.univ.erp.data.NotificationDAO;
 
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -21,15 +22,18 @@ import java.util.logging.Logger;
 //This class basically controls all the logic inside the admin pages
 public class AdminService {
     //The attributes needed by the Admin
+    //These attributes are instances of all the DAOs that the Admin would use
     private static final Logger logger = Logger.getLogger(AdminService.class.getName());
     private UserDAO userDAO;
     private AdminDAO adminDAO;
     private SettingsDAO settingsDAO;
+    private NotificationDAO notificationDAO;
 
-    public AdminService(UserDAO userDAO, AdminDAO adminDAO, SettingsDAO settingsDAO) {
+    public AdminService(UserDAO userDAO, AdminDAO adminDAO, SettingsDAO settingsDAO, NotificationDAO notificationDAO){
         this.userDAO = userDAO;
         this.adminDAO = adminDAO;
         this.settingsDAO = settingsDAO;
+        this.notificationDAO = notificationDAO;
     }
 
     //Method that checks the maintenance mode in the settingsDAO ie the settings table in the StudentDB
@@ -38,9 +42,15 @@ public class AdminService {
     }
 
     //This method is used to change the maintenance mode
-    public boolean toggleMaintenanceMode(boolean newState) {
-        logger.info("Admin setting Maintenance Mode to: " + newState);
-        return settingsDAO.SetMaintenanceMode(newState);
+    //NewState means the new state of the maintenance mode (ON or OFF)
+    public boolean toggleMaintenanceMode(boolean NewState) {
+        logger.info("Admin setting Maintenance Mode to: " + NewState);
+        boolean Success = settingsDAO.SetMaintenanceMode(NewState);
+        if(Success) {//Send Notification
+            String Status = NewState ? "ON" : "OFF";
+            notificationDAO.AddNotification("Maintenance Mode: " + Status);
+        }
+        return Success;
     }
 
     //This method is used to create a new user for the ERP system
@@ -72,7 +82,7 @@ public class AdminService {
         catch (Exception e) {
             logger.severe("Transaction FAILED for createNewUser: " + e.getMessage());
             e.printStackTrace();
-            //If ANY error happens, roll back
+            //If error happens, roll back
             System.out.println("User couldn't be added");
             try {
                 if (AuthDBConnection != null){
@@ -116,7 +126,11 @@ public class AdminService {
             }
             logger.info("Admin creating new course: " + Code);
             System.out.println("Course"+ Code+ "Created successfully");
-            return adminDAO.CreateCourse(Code, Title, Credits);
+            boolean Success = adminDAO.CreateCourse(Code, Title, Credits);
+            if(Success) {//Send Notification
+                notificationDAO.AddNotification("New Course Added" + Code + "-" + Title);
+            }
+            return Success;
         }
         catch (NumberFormatException e) {
             return false;
@@ -128,6 +142,7 @@ public class AdminService {
     public List<Course> getAllCourses() {
         return adminDAO.GetAllCourses();
     }
+
 
     //This just lists down all the instructors for the dropdown panel
     public List<Instructor> getAllInstructors() {
@@ -146,7 +161,11 @@ public class AdminService {
                 //Checks all the necessary conditions
             }
             logger.info("Admin creating new section for: " + course.courseCode());
-            return adminDAO.CreateSection(course.courseId(), instructor.instructorId(), sectionNum, time, capacity);
+            boolean Success = adminDAO.CreateSection(course.courseId(), instructor.instructorId(), sectionNum, time, capacity);
+            if(Success){//Send Notification
+                notificationDAO.AddNotification("New Section Added: "+ course.courseCode()+"("+sectionNum+")");
+            }
+            return Success;
         }
         catch (NumberFormatException e) {
             return false;
@@ -154,48 +173,56 @@ public class AdminService {
         }
     }
 
-    /**
-     * NEW METHOD: Gets all users from both databases and merges them.
-     * This fixes the "Cannot resolve AuthUserInfo" error.
-     */
-    public List<UserView> getAllUsers() {
-        // 1. Get all profiles from StudentDB
-        List<ProfileInfo> students = adminDAO.GetAllStudentProfiles();
-        List<ProfileInfo> instructors = adminDAO.GetAllInstructorProfiles();
 
-        // 2. Combine them into a fast-lookup map
+    //This method loads all the users from the Database and is used mainly in the display for users in UserManagementPanel
+    //It returns an ArrayList of UserView record that contains the FullName, Email and the Role
+    //Gets all the students and instructor from the methods that were defined in AdminDAO
+    //Store both of them in a map(HashMap) that stores the users with a mapping from userID to name
+    //Currently the name of each Admin is default as the Admin User
+    //To change that we would have to add another table in database
+    public List<UserView> GetAllUsers() {
+        List<ProfileInfo> Students = adminDAO.GetAllStudentProfiles();
+        List<ProfileInfo> Instructors = adminDAO.GetAllInstructorProfiles();
         Map<Integer, String> profileMap = new HashMap<>();
-        for (ProfileInfo p : students) {
-            profileMap.put(p.userId(), p.fullName());
+        for (ProfileInfo Profile : Students) {
+            profileMap.put(Profile.userId(), Profile.fullName());
         }
-        for (ProfileInfo p : instructors) {
-            profileMap.put(p.userId(), p.fullName());
+        for (ProfileInfo Profile : Instructors) {
+            profileMap.put(Profile.userId(), Profile.fullName());
         }
 
-        // 3. Get all users from AuthDB
         List<AuthUserInfo> authUsers = userDAO.GetAllAuthUsers();
 
-        // 4. Merge the lists
-        List<UserView> allUsers = new ArrayList<>();
-        for (AuthUserInfo authUser : authUsers) {
-            // Get the name from the map, or use a default
-            String fullName = profileMap.get(authUser.userId());
-
-            if (fullName == null && authUser.role().equalsIgnoreCase("Admin")) {
-                fullName = "Admin User"; // Default name for Admins
-            } else if (fullName == null) {
-                fullName = "N/A (Profile Error)"; // Should not happen
+        List<UserView> AllUsers = new ArrayList<>();
+        for (AuthUserInfo AuthUser : authUsers) {
+            String fullName = profileMap.get(AuthUser.userId());
+            if (fullName == null && AuthUser.role().equalsIgnoreCase("Admin")) {
+                fullName = "Admin User";
+                //Default name for Admins
             }
-
-            allUsers.add(new UserView(fullName, authUser.email(), authUser.role()));
+            else if (fullName == null) {
+                fullName = "N/A (Profile Error)";
+                //Should not happen as only the admin need not have name
+            }
+            AllUsers.add(new UserView(fullName, AuthUser.email(), AuthUser.role()));
         }
-        return allUsers;
+        return AllUsers;
     }
 
-    /**
-     * NEW METHOD: Gets all sections for the UI table.
-     */
-    public List<AdminSectionView> getAllSectionsForView() {
+
+    //This method returns all the sections for the
+    public List<AdminSectionView> GetAllSectionsForView() {
         return adminDAO.getAllSectionsForView();
+    }
+
+
+    //This method is basically wrapper for the setDeadline in the DAO
+    public boolean SetSystemDeadline(String DateString){
+        return settingsDAO.SetDeadline(DateString);
+    }
+
+
+    public String GetSystemDeadline(){
+        return settingsDAO.GetDeadline();
     }
 }

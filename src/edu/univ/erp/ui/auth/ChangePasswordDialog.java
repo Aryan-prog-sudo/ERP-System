@@ -116,7 +116,7 @@ public class ChangePasswordDialog extends JDialog {
         }
 
         // 3. --- Call the Authentication Service ---
-        boolean success = authService.changePassword(
+        boolean success = authService.ChangePassword(
                 this.userEmail,
                 new String(oldPass),
                 new String(newPass)

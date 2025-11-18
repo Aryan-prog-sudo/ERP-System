@@ -63,7 +63,7 @@ public class UserManagementPanel extends JPanel {
      */
     private void loadData() {
         // 1. Get data from the service
-        List<UserView> users = adminService.getAllUsers();
+        List<UserView> users = adminService.GetAllUsers();
 
         // 2. Clear the table
         tableModel.setRowCount(0);

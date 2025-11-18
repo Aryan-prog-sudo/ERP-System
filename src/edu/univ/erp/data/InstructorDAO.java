@@ -110,10 +110,9 @@ public class InstructorDAO {
         }
     }
 
-    /**
-     * NEW METHOD: Finds the Instructor's PRIMARY KEY (InstructorID)
-     * using their foreign key (UserID from AuthDB).
-     */
+
+    //This method finds the instructorID in the instructors table using the UserID
+    //InstructorID is in the instructor table while the UserID is in Users table
     public int getInstructorIdFromUserId(int userId) {
         String sql = "SELECT InstructorID FROM Instructors WHERE UserID = ?";
         try (Connection conn = DatabaseUtil.GetStudentConnection();

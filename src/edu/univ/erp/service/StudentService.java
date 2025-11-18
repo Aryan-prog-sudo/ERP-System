@@ -10,16 +10,14 @@ import edu.univ.erp.util.DatabaseUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Logger;
 
 public class StudentService {
     private static final Logger logger = Logger.getLogger(StudentService.class.getName());
-
     private StudentDAO studentDAO;
     private SettingsDAO settingsDAO;
-
-    // This ID is set by Main.java after a successful login
     private int currentStudentId;
 
     public StudentService(StudentDAO studentDAO, SettingsDAO settingsDAO) {
@@ -27,37 +25,41 @@ public class StudentService {
         this.settingsDAO = settingsDAO;
     }
 
-    // Called by Main after login
+    //Called by Main after login
     public void setCurrentStudent(int studentId) {
         this.currentStudentId = studentId;
     }
 
-    /**
-     * NEW METHOD: This fixes the error from your screenshot.
-     * GradesPanel calls this to know who to generate a transcript for.
-     */
+
     public int getCurrentStudentId() {
         return this.currentStudentId;
     }
 
-    // --- Public Methods for UI ---
 
     public List<SectionView> getCourseCatalog() {
         return studentDAO.getAvailableSections(this.currentStudentId);
     }
 
+
     public List<EnrolledSection> getTimetable() {
         return studentDAO.getTimetable(this.currentStudentId);
     }
+
 
     public List<Grade> getGrades() {
         return studentDAO.getGrades(this.currentStudentId);
     }
 
-    public String registerForSection(int sectionId) {
-        // ... (method is the same as before) ...
+
+    //This method is used to register for cases by the students
+    //It is called in the CourseCatalogPanel when registering for courses
+    public String RegisterForSection(int sectionId) {
         if (settingsDAO.IsMaintenanceModeOn()) {
             return "Registration failed: System is in Maintenance Mode.";
+        }
+
+        if(DeadlinePassed()){
+            return "Registration deadline has passed. The deadline was: "+ GetDeadlineString() +"Now no longer allowed to register";
         }
         Connection conn = null;
         try {
@@ -96,23 +98,27 @@ public class StudentService {
             conn.commit();
             logger.info("Student " + currentStudentId + " registered for section " + sectionId);
             return "Successfully registered!";
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             try { if (conn != null) conn.rollback(); } catch (Exception re) { re.printStackTrace(); }
             if (e.getMessage().contains("Duplicate entry")) {
                 return "Registration failed: You are already enrolled in this section.";
             }
             e.printStackTrace();
             return "Registration failed: A database error occurred.";
-        } finally {
+        }
+        finally {
             try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace(); }
         }
     }
 
 
     public String dropSection(int sectionId) {
-        // ... (method is the same as before) ...
         if (settingsDAO.IsMaintenanceModeOn()) {
             return "Drop failed: System is in Maintenance Mode.";
+        }
+        if(DeadlinePassed()){
+            return "Drop deadline has passed. The deadline was: "+ GetDeadlineString() +"Now no longer allowed to Drop";
         }
         Connection conn = null;
         try {
@@ -136,12 +142,42 @@ public class StudentService {
             conn.commit();
             logger.info("Student " + currentStudentId + " dropped section " + sectionId);
             return "Successfully dropped section.";
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             try { if (conn != null) conn.rollback(); } catch (Exception re) { re.printStackTrace(); }
             e.printStackTrace();
             return "Drop failed: " + e.getMessage();
-        } finally {
-            try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace(); }
         }
+        finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    //This method returns false if today's date is after the deadline
+    //If today's date is after deadline it returns true(No longer dropping or adding courses) else returns false
+    private boolean DeadlinePassed(){
+        try{
+            String DeadlineString = settingsDAO.GetDeadline();
+            LocalDate Deadline = LocalDate.parse(DeadlineString);
+            LocalDate TodayDate = LocalDate.now();
+            return TodayDate.isAfter(Deadline);
+        }
+        catch (Exception e){
+            return false;
+            //In case of failure of date parsing it allows access
+        }
+    }
+
+
+    public String GetDeadlineString(){
+        return settingsDAO.GetDeadline();
     }
 }

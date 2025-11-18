@@ -26,6 +26,7 @@ public class SettingsDAO {
     }
 
 
+    //This basically updates the maintenance mode in the database table
     public boolean SetMaintenanceMode(boolean is_on){
         String SQL = "UPDATE SystemSettings SET SettingValue = ? WHERE SettingKey = 'MaintenanceMode'";
         try(Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)){
@@ -35,6 +36,43 @@ public class SettingsDAO {
         }
         catch (Exception e){
             e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    //This method adds deadline to the table in database
+    public String GetDeadline(){
+        String SQL = "SELECT SettingValue FROM SystemSettings WHERE SettingKey = 'Deadline'";
+        try(Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL); ResultSet Result = Statement.executeQuery()){
+            if(Result.next()){
+                return Result.getString("SettingValue");
+            }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        return "2099-01-1";
+        //Default deadline
+    }
+
+
+    public boolean SetDeadline(String DateString){
+        String UpdateSQL = "UPDATE SystemSettings SET SettingValue = ? WHERE SettingKey = 'Deadline'";
+        try(Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(UpdateSQL)){
+            Statement.setString(1, DateString);
+            int Rows = Statement.executeUpdate();
+            if(Rows>0){
+                return true;
+            }
+            String InsertSQL = "INSERT INTO SystemSettings (SettingKey, SettingValue) VALUES ('Deadline', ?)";
+            try(PreparedStatement InsertStatement = StudentDBConnection.prepareStatement(InsertSQL)){
+                InsertStatement.setString(1, DateString);
+                return InsertStatement.executeUpdate()>0;
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();;
             return false;
         }
     }

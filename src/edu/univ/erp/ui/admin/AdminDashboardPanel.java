@@ -8,10 +8,12 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Admin home page dashboard.
- * UPDATED: Beautified with a modern look and feel.
+ * FIXED: Restored Maintenance Mode warning popups.
  */
 public class AdminDashboardPanel extends JPanel {
 
@@ -22,8 +24,10 @@ public class AdminDashboardPanel extends JPanel {
     private static final Color COLOR_TEXT_DARK = new Color(30, 30, 30);
     private static final Color COLOR_TEXT_LIGHT = new Color(140, 140, 140);
     private static final Color COLOR_BORDER = new Color(220, 220, 220);
-    private static final Color COLOR_SETTINGS_BG = new Color(250, 250, 250); // A light, clean gray
-    private static final Color COLOR_GREEN_ON = new Color(0, 150, 50); // A nice green for "ON"
+
+    // Settings Specific Colors
+    private static final Color COLOR_SETTINGS_BG = new Color(250, 250, 250);
+    private static final Color COLOR_GREEN_ON = new Color(0, 150, 50);
 
     private AdminService adminService;
 
@@ -58,126 +62,161 @@ public class AdminDashboardPanel extends JPanel {
         centerWrapper.setBackground(COLOR_BACKGROUND);
         centerWrapper.setLayout(new BoxLayout(centerWrapper, BoxLayout.Y_AXIS));
 
+        // 1. Add Settings Panel (Maintenance + Deadline)
         centerWrapper.add(createSettingsPanel());
+
         centerWrapper.add(Box.createRigidArea(new Dimension(0, 30)));
+
+        // 2. Add Navigation Cards
         centerWrapper.add(createCardsPanel(onManageUsers, onManageCourses, onManageSections));
 
         add(centerWrapper, BorderLayout.CENTER);
     }
 
     /**
-     * UPDATED: createSettingsPanel, now styled
+     * Creates the split settings panel (Maintenance on Left, Deadline on Right).
      */
     private JPanel createSettingsPanel() {
-        JPanel panel = new JPanel(new BorderLayout(20, 0));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(COLOR_BORDER), // Use standard light border
-                new EmptyBorder(20, 20, 20, 20))
-        );
-        panel.setBackground(COLOR_SETTINGS_BG); // Use the new light gray
+        JPanel panel = new JPanel(new GridLayout(1, 2, 20, 0)); // 2 Columns
+        panel.setOpaque(false);
 
-        // Text content
-        JPanel textPanel = new JPanel();
-        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
-        textPanel.setOpaque(false); // Transparent background
+        // --- LEFT: Maintenance Mode ---
+        JPanel maintPanel = new JPanel(new BorderLayout());
+        maintPanel.setBackground(COLOR_SETTINGS_BG);
+        maintPanel.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(COLOR_BORDER), new EmptyBorder(15, 15, 15, 15)));
 
-        JLabel title = new JLabel("System Settings");
-        title.setFont(new Font("SansSerif", Font.BOLD, 20));
-        title.setForeground(COLOR_TEXT_DARK);
+        JLabel maintTitle = new JLabel("System Maintenance");
+        maintTitle.setFont(new Font("SansSerif", Font.BOLD, 16));
+        maintTitle.setForeground(COLOR_TEXT_DARK);
+        JLabel maintDesc = new JLabel("Disable non-admin access");
+        maintDesc.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        maintDesc.setForeground(COLOR_TEXT_LIGHT);
 
-        JLabel modeLabel = new JLabel("Maintenance Mode");
-        modeLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        modeLabel.setForeground(COLOR_TEXT_DARK);
+        JPanel maintText = new JPanel();
+        maintText.setOpaque(false);
+        maintText.setLayout(new BoxLayout(maintText, BoxLayout.Y_AXIS));
+        maintText.add(maintTitle);
+        maintText.add(maintDesc);
 
-        JLabel descLabel = new JLabel("Disable all non-admin changes across the system");
-        descLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        descLabel.setForeground(COLOR_TEXT_LIGHT);
-
-        textPanel.add(title);
-        textPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        textPanel.add(modeLabel);
-        textPanel.add(Box.createRigidArea(new Dimension(0, 3)));
-        textPanel.add(descLabel);
-        panel.add(textPanel, BorderLayout.CENTER);
-
-        // --- Toggle Button, now styled ---
-        JToggleButton toggleButton = new JToggleButton();
+        // Toggle Button
+        JToggleButton toggleButton = new JToggleButton("OFF");
         toggleButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        toggleButton.setPreferredSize(new Dimension(80, 40));
         toggleButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        toggleButton.setOpaque(true);
+        toggleButton.setPreferredSize(new Dimension(80, 40));
 
-        // Get initial state from the service
-        boolean initialState = adminService.getMaintenanceModeState();
-        if (initialState) {
-            setToggleStateOn(toggleButton);
+        // Load initial state
+        if (adminService.getMaintenanceModeState()) {
+            toggleButton.setText("ON");
+            toggleButton.setSelected(true);
+            toggleButton.setBackground(COLOR_GREEN_ON);
+            toggleButton.setForeground(Color.WHITE);
         } else {
-            setToggleStateOff(toggleButton);
+            toggleButton.setBackground(COLOR_BACKGROUND);
+            toggleButton.setForeground(COLOR_TEXT_DARK);
         }
 
-        // Action listener (functionality is identical)
         toggleButton.addActionListener(e -> {
-            boolean isSelected = toggleButton.isSelected();
-            boolean success = adminService.toggleMaintenanceMode(isSelected);
+            boolean newState = toggleButton.isSelected();
+            if(adminService.toggleMaintenanceMode(newState)) {
+                // Update Style
+                toggleButton.setText(newState ? "ON" : "OFF");
+                toggleButton.setBackground(newState ? COLOR_GREEN_ON : COLOR_BACKGROUND);
+                toggleButton.setForeground(newState ? Color.WHITE : COLOR_TEXT_DARK);
 
-            if (success) {
-                if (isSelected) {
-                    setToggleStateOn(toggleButton);
+                // --- FIX IS HERE: Show Warning Messages ---
+                if (newState) {
                     JOptionPane.showMessageDialog(this,
-                            "Maintenance Mode is now ON.",
-                            "Maintenance Mode Enabled",
+                            "Maintenance Mode is now ON.\nStudents and Instructors cannot make changes.",
+                            "Maintenance Enabled",
                             JOptionPane.WARNING_MESSAGE);
                 } else {
-                    setToggleStateOff(toggleButton);
                     JOptionPane.showMessageDialog(this,
-                            "Maintenance Mode is now OFF.",
-                            "Maintenance Mode Disabled",
+                            "Maintenance Mode is now OFF.\nSystem is fully accessible.",
+                            "Maintenance Disabled",
                             JOptionPane.INFORMATION_MESSAGE);
                 }
             } else {
-                toggleButton.setSelected(!isSelected); // Revert
-                JOptionPane.showMessageDialog(this, "Could not update setting.", "Error", JOptionPane.ERROR_MESSAGE);
+                toggleButton.setSelected(!newState); // Revert on fail
+                JOptionPane.showMessageDialog(this, "Failed to update setting.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        JPanel toggleWrapper = new JPanel(new GridBagLayout());
-        toggleWrapper.setOpaque(false); // Transparent
-        toggleWrapper.add(toggleButton);
-        panel.add(toggleWrapper, BorderLayout.EAST);
+        maintPanel.add(maintText, BorderLayout.CENTER);
+        maintPanel.add(toggleButton, BorderLayout.EAST);
+
+
+        // --- RIGHT: Deadline Settings ---
+        JPanel deadlinePanel = new JPanel(new BorderLayout());
+        deadlinePanel.setBackground(COLOR_SETTINGS_BG);
+        deadlinePanel.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(COLOR_BORDER), new EmptyBorder(15, 15, 15, 15)));
+
+        JLabel dateTitle = new JLabel("Registration Deadline");
+        dateTitle.setFont(new Font("SansSerif", Font.BOLD, 16));
+        dateTitle.setForeground(COLOR_TEXT_DARK);
+        JLabel dateDesc = new JLabel("Set the cutoff date (YYYY-MM-DD)");
+        dateDesc.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        dateDesc.setForeground(COLOR_TEXT_LIGHT);
+
+        JPanel dateText = new JPanel();
+        dateText.setOpaque(false);
+        dateText.setLayout(new BoxLayout(dateText, BoxLayout.Y_AXIS));
+        dateText.add(dateTitle);
+        dateText.add(dateDesc);
+
+        // Date Spinner
+        JSpinner dateSpinner = new JSpinner(new SpinnerDateModel());
+        JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd");
+        dateSpinner.setEditor(dateEditor);
+        dateSpinner.setFont(new Font("SansSerif", Font.PLAIN, 14));
+
+        // Load current deadline
+        try {
+            String currentDeadline = adminService.GetSystemDeadline();
+            Date date = new SimpleDateFormat("yyyy-MM-dd").parse(currentDeadline);
+            dateSpinner.setValue(date);
+        } catch (Exception e) {
+            dateSpinner.setValue(new Date()); // Fallback to today
+        }
+
+        JButton setButton = createModernButton("Set", true);
+        setButton.setPreferredSize(new Dimension(60, 30));
+        setButton.addActionListener(e -> {
+            Date selectedDate = (Date) dateSpinner.getValue();
+            String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(selectedDate);
+            if(adminService.SetSystemDeadline(dateStr)) {
+                JOptionPane.showMessageDialog(this, "Registration deadline updated to: " + dateStr);
+            }
+        });
+
+        JPanel controlPanel = new JPanel(new BorderLayout(10, 0));
+        controlPanel.setOpaque(false);
+        controlPanel.add(dateSpinner, BorderLayout.CENTER);
+        controlPanel.add(setButton, BorderLayout.EAST);
+
+        deadlinePanel.add(dateText, BorderLayout.CENTER);
+        deadlinePanel.add(controlPanel, BorderLayout.SOUTH);
+
+        // Add both panels to the wrapper
+        panel.add(maintPanel);
+        panel.add(deadlinePanel);
 
         return panel;
     }
 
-    // Helper methods for the toggle button styles
-    private void setToggleStateOn(JToggleButton button) {
-        button.setText("ON");
-        button.setSelected(true);
-        button.setBackground(COLOR_GREEN_ON);
-        button.setForeground(Color.WHITE);
-        button.setBorder(null);
-    }
-
-    private void setToggleStateOff(JToggleButton button) {
-        button.setText("OFF");
-        button.setSelected(false);
-        button.setBackground(COLOR_BACKGROUND);
-        button.setForeground(COLOR_TEXT_DARK);
-        button.setBorder(new LineBorder(COLOR_BORDER, 1));
-    }
-
     /**
-     * UPDATED: createCardsPanel, now styled
+     * Creates the navigation cards panel.
      */
     private JPanel createCardsPanel(Runnable onManageUsers, Runnable onManageCourses, Runnable onManageSections) {
         JPanel cardsPanel = new JPanel(new GridBagLayout());
         cardsPanel.setBackground(COLOR_BACKGROUND);
         GridBagConstraints gbc = new GridBagConstraints();
 
-        // Use the modern button helper
         JButton userButton = createModernButton("Open User Management", true);
         userButton.addActionListener(e -> onManageUsers.run());
         JPanel card1 = createDashboardCard(
-                createIconLabel("users.png", "👥"), // Users icon
+                createIconLabel("users.png", "👥"),
                 "Manage Users",
                 "Add students, instructors, and manage roles",
                 userButton
@@ -186,7 +225,7 @@ public class AdminDashboardPanel extends JPanel {
         JButton courseButton = createModernButton("Open Course Management", false);
         courseButton.addActionListener(e -> onManageCourses.run());
         JPanel card2 = createDashboardCard(
-                createIconLabel("book.png", "📚"), // Courses icon
+                createIconLabel("book.png", "📚"),
                 "Manage Courses",
                 "Create new courses for the curriculum",
                 courseButton
@@ -195,13 +234,12 @@ public class AdminDashboardPanel extends JPanel {
         JButton sectionButton = createModernButton("Open Section Management", false);
         sectionButton.addActionListener(e -> onManageSections.run());
         JPanel card3 = createDashboardCard(
-                createIconLabel("sections.png", "🏫"), // Sections icon
+                createIconLabel("sections.png", "🏫"),
                 "Manage Sections",
                 "Schedule classes and assign instructors",
                 sectionButton
         );
 
-        // Layout logic is identical
         gbc.fill = GridBagConstraints.BOTH; gbc.weightx = 1.0; gbc.weighty = 1.0;
         gbc.gridx = 0; gbc.gridy = 0; gbc.insets = new Insets(0, 0, 0, 10);
         cardsPanel.add(card1, gbc);
@@ -214,21 +252,21 @@ public class AdminDashboardPanel extends JPanel {
     }
 
     /**
-     * UPDATED: createDashboardCard, now styled
+     * Helper to create a single dashboard card.
      */
     private JPanel createDashboardCard(JLabel icon, String title, String description, JButton button) {
         JPanel card = new JPanel(new BorderLayout(10, 10));
         card.setBackground(COLOR_BACKGROUND);
         card.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(COLOR_BORDER), // Lighter border
+                new LineBorder(COLOR_BORDER),
                 new EmptyBorder(25, 25, 25, 25)
         ));
 
         JPanel topPanel = new JPanel();
-        topPanel.setOpaque(false); // Transparent background
+        topPanel.setOpaque(false);
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
 
-        topPanel.add(icon); // Add the icon label
+        topPanel.add(icon);
         topPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         JLabel titleLabel = new JLabel(title);
@@ -246,21 +284,16 @@ public class AdminDashboardPanel extends JPanel {
 
         button.setPreferredSize(new Dimension(button.getPreferredSize().width, 40));
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        buttonPanel.setOpaque(false); // Transparent
+        buttonPanel.setOpaque(false);
         buttonPanel.add(button);
 
         card.add(buttonPanel, BorderLayout.SOUTH);
-
-        // Invisible spacer (functionality unchanged)
         card.add(Box.createGlue(), BorderLayout.CENTER);
         return card;
     }
 
-    // --- Helper Methods (Copied from previous examples) ---
+    // --- Helper Methods ---
 
-    /**
-     * Helper method to create a modern button with hover effects.
-     */
     private JButton createModernButton(String text, boolean isPrimary) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -269,9 +302,19 @@ public class AdminDashboardPanel extends JPanel {
         button.setBorder(new EmptyBorder(5, 15, 5, 15));
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        Color bg = isPrimary ? COLOR_PRIMARY : COLOR_BACKGROUND;
-        Color fg = isPrimary ? Color.WHITE : COLOR_TEXT_DARK;
-        Color bgHover = isPrimary ? COLOR_PRIMARY_DARK : new Color(240, 240, 240);
+        final Color bg;
+        final Color fg;
+        final Color bgHover;
+
+        if (isPrimary) {
+            bg = COLOR_PRIMARY;
+            fg = Color.WHITE;
+            bgHover = COLOR_PRIMARY_DARK;
+        } else {
+            bg = COLOR_BACKGROUND;
+            fg = COLOR_TEXT_DARK;
+            bgHover = new Color(240, 240, 240);
+        }
 
         button.setBackground(bg);
         button.setForeground(fg);
@@ -290,9 +333,6 @@ public class AdminDashboardPanel extends JPanel {
         return button;
     }
 
-    /**
-     * Helper method to load an icon.
-     */
     private JLabel createIconLabel(String fileName, String fallbackText) {
         try {
             URL iconUrl = getClass().getResource("/icons/" + fileName);

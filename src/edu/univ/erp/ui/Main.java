@@ -1,42 +1,49 @@
 package edu.univ.erp.ui;
 
-// ... (all your UI imports)
+// UI Imports
 import edu.univ.erp.ui.auth.LoginDialog;
 import edu.univ.erp.ui.auth.ChangePasswordDialog;
 import edu.univ.erp.ui.student.*;
 import edu.univ.erp.ui.instructor.*;
 import edu.univ.erp.ui.admin.*;
 
-// --- BACKEND IMPORTS ---
+// Backend Imports
 import edu.univ.erp.auth.UserDAO;
 import edu.univ.erp.data.*;
 import edu.univ.erp.service.*;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.List; // For notifications
 import java.util.function.Consumer;
 
-/**
- * UPDATED: Now uses REAL UserIDs from login.
- */
 public class Main extends JFrame {
 
-    // ... (all UI and Backend fields are the same)
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private JLabel welcomeLabel;
+
+    // DAOs
     private UserDAO userDAO;
     private AdminDAO adminDAO;
     private SettingsDAO settingsDAO;
     private StudentDAO studentDAO;
     private InstructorDAO instructorDAO;
+    private NotificationDAO notificationDAO; // <-- NEW
+
+    // Services
     private AuthService authService;
     private AdminService adminService;
     private StudentService studentService;
     private InstructorService instructorService;
     private TranscriptService transcriptService;
+
+    // State
     private String loggedInUserEmail = null;
     private int loggedInUserId = -1;
+
+    // Panels
     private StudentDashboardPanel studentDashboard;
     private CourseCatalogPanel courseCatalog;
     private TimetablePanel timetablePanel;
@@ -48,68 +55,79 @@ public class Main extends JFrame {
     private CourseManagementPanel courseManagementPanel;
     private SectionManagementPanel sectionManagementPanel;
 
-
     public Main() {
-        // ... (window setup)
+        // Window setup
         setTitle("University ERP");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1024, 768));
         setLocationRelativeTo(null);
 
-        // --- 1. INSTANTIATE BACKEND (Same as before) ---
+        // --- 1. INSTANTIATE BACKEND ---
         this.userDAO = new UserDAO();
         this.adminDAO = new AdminDAO();
         this.settingsDAO = new SettingsDAO();
         this.studentDAO = new StudentDAO();
         this.instructorDAO = new InstructorDAO();
+        this.notificationDAO = new NotificationDAO(); // <-- NEW
+
+        // Services (Updated with new dependencies)
         this.authService = new AuthService(userDAO, settingsDAO);
-        this.adminService = new AdminService(userDAO, adminDAO, settingsDAO);
+
+        // AdminService now needs NotificationDAO
+        this.adminService = new AdminService(userDAO, adminDAO, settingsDAO, notificationDAO);
+
+        // StudentService needs SettingsDAO (for Deadlines)
         this.studentService = new StudentService(studentDAO, settingsDAO);
+
+        // InstructorService needs SettingsDAO (for Maintenance Mode checks)
         this.instructorService = new InstructorService(instructorDAO, settingsDAO);
+
         this.transcriptService = new TranscriptService(studentDAO);
 
-        // ... (UI Instantiation and Nav Creation is the same) ...
+        // --- 2. UI SETUP ---
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
+
+        // Navigation Commands
         Runnable showStudentHome = () -> cardLayout.show(mainPanel, "student_dashboard");
         Runnable showCatalog = () -> cardLayout.show(mainPanel, "catalog");
         Runnable showTimetable = () -> cardLayout.show(mainPanel, "timetable");
         Runnable showGrades = () -> cardLayout.show(mainPanel, "grades");
         Runnable showInstructorHome = () -> cardLayout.show(mainPanel, "my_sections");
+
         Consumer<Integer> showGradebookForSection = (sectionId) -> {
             try {
                 System.out.println("Attempting to load gradebook for section: " + sectionId);
-                gradebookPanel.loadGradebook(sectionId); // 1. Try to load data
-
-                System.out.println("Data loaded. Attempting to show 'gradebook' card...");
-                cardLayout.show(mainPanel, "gradebook"); // 2. Try to show panel
-
-                System.out.println("Card switch successful.");
-
+                gradebookPanel.loadGradebook(sectionId);
+                cardLayout.show(mainPanel, "gradebook");
             } catch (Exception e) {
-                // 3. If anything fails, show an error and print the details
-                System.err.println("--- FATAL ERROR: Could not open gradebook! ---");
-                e.printStackTrace(); // THIS WILL TELL US THE EXACT BUG
-
+                e.printStackTrace();
                 JOptionPane.showMessageDialog(mainPanel,
                         "Could not open gradebook. An internal error occurred:\n" + e.getMessage(),
-                        "Panel Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Panel Error", JOptionPane.ERROR_MESSAGE);
             }
-        };        Runnable showAdminHome = () -> cardLayout.show(mainPanel, "admin_dashboard");
+        };
+
+        Runnable showAdminHome = () -> cardLayout.show(mainPanel, "admin_dashboard");
         Runnable showUserManagement = () -> cardLayout.show(mainPanel, "admin_users");
         Runnable showCourseManagement = () -> cardLayout.show(mainPanel, "admin_courses");
         Runnable showSectionManagement = () -> cardLayout.show(mainPanel, "admin_sections");
+
+        // Initialize Panels
         studentDashboard = new StudentDashboardPanel(showCatalog, showTimetable, showGrades);
         courseCatalog = new CourseCatalogPanel(showStudentHome, studentService);
         timetablePanel = new TimetablePanel(showStudentHome, studentService);
         gradesPanel = new GradesPanel(showStudentHome, studentService, transcriptService);
+
         mySectionsPanel = new MySectionsPanel(showGradebookForSection, instructorService);
         gradebookPanel = new GradebookPanel(showInstructorHome, instructorService);
+
         adminDashboard = new AdminDashboardPanel(showUserManagement, showCourseManagement, showSectionManagement, adminService);
         userManagementPanel = new UserManagementPanel(showAdminHome, adminService);
         courseManagementPanel = new CourseManagementPanel(showAdminHome, adminService);
         sectionManagementPanel = new SectionManagementPanel(showAdminHome, adminService);
+
+        // Add Panels to CardLayout
         mainPanel.add(studentDashboard, "student_dashboard");
         mainPanel.add(courseCatalog, "catalog");
         mainPanel.add(timetablePanel, "timetable");
@@ -122,81 +140,62 @@ public class Main extends JFrame {
         mainPanel.add(sectionManagementPanel, "admin_sections");
 
         add(mainPanel);
-        setJMenuBar(createMainMenuBar());
+
+        // Create the top menu bar (Now includes Notifications)
+        createMenuBar();
     }
 
     /**
-     * UPDATED: Now accepts the REAL UserID from LoginDialog.
-     */
-    /**
-     * UPDATED: Now uses the DAO to look up the REAL StudentID/InstructorID
-     * from the UserID provided by the AuthDB. (TYPO FIXED)
+     * Logic to handle successful login and routing.
      */
     public void onLoginSuccess(String role, String username, int userId) {
-
         this.loggedInUserEmail = username;
-        this.loggedInUserId = userId; // This is the UserID from AuthDB
+        this.loggedInUserId = userId; // UserID from AuthDB
 
         String displayName = "User";
-        String dashboardName = "student_dashboard"; // Default
-
-        // --- TODO: This should call a service to get profile info ---
-        // e.g., String name = studentService.getStudentName(userId);
+        String dashboardName = "student_dashboard";
 
         if ("student".equalsIgnoreCase(role)) {
-
-            // --- FIX FOR STUDENT ---
+            // Look up Real Student ID
             int studentId = studentDAO.getStudentIdFromUserId(userId);
             if (studentId == -1) {
-                JOptionPane.showMessageDialog(this, "Login failed: No student profile found for this user.", "Login Error", JOptionPane.ERROR_MESSAGE);
-                // Go back to login
-                // Note: You might need to make showLoginDialog non-static to call this
-                // For now, we'll just prevent login.
+                JOptionPane.showMessageDialog(this, "Login failed: No student profile found.", "Login Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
-            displayName = "Student"; // Placeholder
-            studentService.setCurrentStudent(studentId); // <-- Set the REAL StudentID
+            displayName = "Student";
+            studentService.setCurrentStudent(studentId);
             dashboardName = "student_dashboard";
 
         } else if ("instructor".equalsIgnoreCase(role)) {
-
-            // --- FIX FOR INSTRUCTOR ---
+            // Look up Real Instructor ID
             int instructorId = instructorDAO.getInstructorIdFromUserId(userId);
-            // The typo was here
             if (instructorId == -1) {
-                JOptionPane.showMessageDialog(this, "Login failed: No instructor profile found for this user.", "Login Error", JOptionPane.ERROR_MESSAGE);
-                // Go back to login
+                JOptionPane.showMessageDialog(this, "Login failed: No instructor profile found.", "Login Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
-            displayName = "Instructor"; // Placeholder
-            instructorService.setCurrentInstructor(instructorId); // <-- Set the REAL InstructorID
-            dashboardName = "my_sections"; // Instructor dashboard
+            displayName = "Instructor";
+            instructorService.setCurrentInstructor(instructorId);
+            dashboardName = "my_sections";
 
         } else if ("admin".equalsIgnoreCase(role)) {
             displayName = "Admin User";
             dashboardName = "admin_dashboard";
         }
 
-        // TODO: Use the ID to fetch the user's FullName from the StudentDB
-        // and set it on the welcomeLabel.
-        // String realName = ...
-        // welcomeLabel.setText("Welcome, " + realName + "  ");
-        welcomeLabel.setText("Welcome, " + displayName + "  "); // Using placeholder
-
+        welcomeLabel.setText("Welcome, " + displayName + "  ");
         cardLayout.show(mainPanel, dashboardName);
         this.setVisible(true);
-    }    // ... (createMainMenuBar is the same, it already works) ...
-    private JMenuBar createMainMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
-        menuBar.add(Box.createHorizontalGlue());
-        welcomeLabel = new JLabel("Welcome!  ");
-        welcomeLabel.setFont(welcomeLabel.getFont().deriveFont(Font.PLAIN, 14f));
-        menuBar.add(welcomeLabel);
+    }
 
+    /**
+     * UPDATED: Creates the Menu Bar with the Notification Bell.
+     */
+    private void createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+
+        // --- File Menu ---
         JMenu fileMenu = new JMenu("File");
-        fileMenu.setFont(fileMenu.getFont().deriveFont(Font.PLAIN, 14f));
+        fileMenu.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
         JMenuItem changePasswordItem = new JMenuItem("Change Password");
         changePasswordItem.addActionListener(e -> {
@@ -209,21 +208,84 @@ public class Main extends JFrame {
         });
 
         JMenuItem logoutItem = new JMenuItem("Logout");
-        logoutItem.addActionListener(e -> {
-            this.loggedInUserEmail = null;
-            this.loggedInUserId = -1;
-            this.setVisible(false);
-            this.dispose();
-            showLoginDialog(true);
-        });
+        logoutItem.addActionListener(e -> logout());
+
+        JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.addActionListener(e -> System.exit(0));
 
         fileMenu.add(changePasswordItem);
+        fileMenu.addSeparator();
         fileMenu.add(logoutItem);
+        fileMenu.add(exitItem);
         menuBar.add(fileMenu);
-        return menuBar;
+
+        // --- Middle: Spacer ---
+        menuBar.add(Box.createHorizontalGlue());
+
+        // Welcome Label (Center/Rightish)
+        welcomeLabel = new JLabel("Welcome!  ");
+        welcomeLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        menuBar.add(welcomeLabel);
+
+        // Spacer before notifications
+        menuBar.add(Box.createRigidArea(new Dimension(20, 0)));
+
+        // --- Right Side: Notifications Button ---
+        JButton notifButton = new JButton("🔔 Notifications");
+        notifButton.setBorderPainted(false);
+        notifButton.setContentAreaFilled(false);
+        notifButton.setFocusPainted(false);
+        notifButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        notifButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+        notifButton.addActionListener(e -> showNotifications(notifButton));
+
+        menuBar.add(notifButton);
+        menuBar.add(Box.createRigidArea(new Dimension(15, 0))); // Padding
+
+        setJMenuBar(menuBar);
     }
 
-    // ... (main and showLoginDialog are the same) ...
+    /**
+     * NEW: Displays the notification popup menu.
+     */
+    private void showNotifications(JButton source) {
+        JPopupMenu popup = new JPopupMenu();
+        popup.setPreferredSize(new Dimension(350, 250)); // Size of popup
+
+        List<String> msgs = notificationDAO.GetRecentNotifications();
+
+        if (msgs.isEmpty()) {
+            JMenuItem item = new JMenuItem("No new notifications");
+            item.setEnabled(false);
+            popup.add(item);
+        } else {
+            JLabel header = new JLabel("  Recent Updates");
+            header.setFont(new Font("SansSerif", Font.BOLD, 12));
+            header.setForeground(Color.GRAY);
+            header.setBorder(new EmptyBorder(5, 0, 5, 0));
+            popup.add(header);
+            popup.addSeparator();
+
+            for (String msg : msgs) {
+                // HTML for word wrapping
+                JMenuItem item = new JMenuItem("<html><body style='width: 280px'>" + msg + "</body></html>");
+                item.setBackground(Color.WHITE);
+                popup.add(item);
+            }
+        }
+
+        popup.show(source, 0, source.getHeight());
+    }
+
+    private void logout() {
+        this.loggedInUserEmail = null;
+        this.loggedInUserId = -1;
+        this.setVisible(false);
+        this.dispose();
+        showLoginDialog(true);
+    }
+
     public static void main(String[] args) {
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
@@ -243,6 +305,8 @@ public class Main extends JFrame {
             loginDialog.setLogoutMessage("You have been logged out.");
         }
         loginDialog.setVisible(true);
+
+        // If dialog closes without login, exit app
         if (!mainApp.isVisible()) {
             System.exit(0);
         }

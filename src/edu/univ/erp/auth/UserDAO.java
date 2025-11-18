@@ -13,6 +13,7 @@ import java.util.List; // <-- NEW IMPORT
 //This class handles the SQL connections for the AuthDB
 public class UserDAO {
     //The below method is used to check weather the password and email provided at the login time are valid
+    //If it is valid then it returns an AuthResult object
     //The string SQL is basically the query that we would use to read the desired things from the table of Users in AuthDB
     //The query is prepared using the .preparedStatment() and the ? used as place-holders are set using the .setString method
     //This CheckLogin is used in the AuthService and basically checks if the Email and password used are valid

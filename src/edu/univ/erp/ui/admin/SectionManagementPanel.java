@@ -258,7 +258,7 @@ public class SectionManagementPanel extends JPanel {
      * Fixes Bug 4 (stale table).
      */
     private void loadSectionsData() {
-        List<AdminSectionView> sections = adminService.getAllSectionsForView();
+        List<AdminSectionView> sections = adminService.GetAllSectionsForView();
         tableModel.setRowCount(0); // Clear table
 
         for (AdminSectionView s : sections) {

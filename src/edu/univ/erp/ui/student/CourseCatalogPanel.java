@@ -9,15 +9,16 @@ import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ComponentAdapter; // <-- NEW IMPORT
+import java.awt.event.ComponentEvent;   // <-- NEW IMPORT
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.net.URL;
 import java.util.List;
 
 /**
  * Course Catalog Panel.
- * UPDATED: Now shows "Credits" column and is beautified.
- * FIXED: 'final' keyword bug for button hover.
+ * UPDATED: Auto-refreshes when opened.
+ * FIXED: SeatsAvailableRenderer logic and button hover variables.
  */
 public class CourseCatalogPanel extends JPanel {
 
@@ -35,6 +36,7 @@ public class CourseCatalogPanel extends JPanel {
     private DefaultTableModel tableModel;
     private StudentService studentService;
     private List<SectionView> sectionList;
+    private JLabel deadlineLabel;
 
     public CourseCatalogPanel(Runnable onGoBack, StudentService studentService) {
         this.studentService = studentService;
@@ -45,7 +47,19 @@ public class CourseCatalogPanel extends JPanel {
         add(createHeaderPanel(onGoBack), BorderLayout.NORTH);
         add(createTablePanel(), BorderLayout.CENTER);
 
+        // Load initial data
         loadData();
+        updateDeadlineLabel();
+
+        // --- NEW: Add Listener to Refresh on Page Load ---
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                System.out.println("Catalog Panel Shown - Refreshing Data...");
+                loadData();
+                updateDeadlineLabel();
+            }
+        });
     }
 
     /**
@@ -59,7 +73,7 @@ public class CourseCatalogPanel extends JPanel {
             tableModel.addRow(new Object[]{
                     section.courseCode(),
                     section.courseTitle(),
-                    section.credits(), // <-- NEW
+                    section.credits(),
                     section.instructorName(),
                     section.timeSlot(),
                     section.enrolled() + " / " + section.capacity(),
@@ -68,37 +82,50 @@ public class CourseCatalogPanel extends JPanel {
         }
     }
 
-    /**
-     * UPDATED: createHeaderPanel, now styled.
-     */
     private JPanel createHeaderPanel(Runnable onGoBack) {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BACKGROUND);
 
+        // 1. Top Title Row
+        JPanel topRow = new JPanel(new BorderLayout());
+        topRow.setBackground(COLOR_BACKGROUND);
+
         JButton goBackButton = createModernButton("← Go Back", false, false);
         goBackButton.addActionListener(e -> onGoBack.run());
 
-        JLabel titleLabel = new JLabel("Course Catalog");
+        JLabel titleLabel = new JLabel("Course Catalog", SwingConstants.CENTER);
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
         titleLabel.setForeground(COLOR_TEXT_DARK);
-        titleLabel.setHorizontalAlignment(JLabel.CENTER);
 
         JButton refreshButton = createModernButton("Refresh", false, false);
-        refreshButton.addActionListener(e -> loadData());
+        refreshButton.addActionListener(e -> {
+            loadData();
+            updateDeadlineLabel(); // Refresh date too
+        });
 
-        headerPanel.add(goBackButton, BorderLayout.WEST);
-        headerPanel.add(titleLabel, BorderLayout.CENTER);
-        headerPanel.add(refreshButton, BorderLayout.EAST);
+        topRow.add(goBackButton, BorderLayout.WEST);
+        topRow.add(titleLabel, BorderLayout.CENTER);
+        topRow.add(refreshButton, BorderLayout.EAST);
+
+        // 2. Bottom Deadline Row
+        deadlineLabel = new JLabel("Loading deadline...", SwingConstants.CENTER);
+        deadlineLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        deadlineLabel.setForeground(new Color(220, 50, 50)); // Red text
+        deadlineLabel.setBorder(new EmptyBorder(0, 0, 10, 0));
+
+        headerPanel.add(topRow, BorderLayout.NORTH);
+        headerPanel.add(deadlineLabel, BorderLayout.SOUTH);
 
         return headerPanel;
     }
 
-    /**
-     * UPDATED: createTablePanel with new "Credits" column
-     * and fixed column indices for renderers.
-     */
+    private void updateDeadlineLabel() {
+        // Fixed case: GetDeadlineString -> getDeadlineString
+        String deadline = studentService.GetDeadlineString();
+        deadlineLabel.setText("Registration Deadline: " + deadline);
+    }
+
     private JScrollPane createTablePanel() {
-        // --- UPDATED: Added "Credits" column ---
         String[] columnNames = {"Course Code", "Title", "Credits", "Instructor", "Time", "Seats", "Actions"};
 
         tableModel = new DefaultTableModel(null, columnNames) {
@@ -115,7 +142,6 @@ public class CourseCatalogPanel extends JPanel {
         courseTable.setGridColor(COLOR_BORDER);
         courseTable.setIntercellSpacing(new Dimension(0, 0));
 
-        // --- UPDATED: Column indices are now 5 and 6 ---
         courseTable.getColumnModel().getColumn(5).setCellRenderer(new SeatsAvailableRenderer());
         courseTable.getColumnModel().getColumn(6).setCellRenderer(new ButtonColumnRenderer());
         courseTable.addMouseListener(new JTableButtonMouseListener(courseTable));
@@ -129,14 +155,12 @@ public class CourseCatalogPanel extends JPanel {
         courseTable.getColumnModel().getColumn(5).setPreferredWidth(70);  // Seats
         courseTable.getColumnModel().getColumn(6).setPreferredWidth(100); // Actions
 
-
         JScrollPane scrollPane = new JScrollPane(courseTable);
         scrollPane.setBorder(new LineBorder(COLOR_BORDER));
         return scrollPane;
     }
 
     // --- Inner class for Table (ButtonColumnRenderer) ---
-    // UPDATED: Now styled
     private class ButtonColumnRenderer extends DefaultTableCellRenderer {
         private final JButton registerButton;
         private final JButton dropButton;
@@ -155,7 +179,6 @@ public class CourseCatalogPanel extends JPanel {
             } else if ("Drop".equals(buttonText)) {
                 return dropButton;
             }
-            // Return an empty panel for spacing, otherwise it can mess up layout
             JPanel spacer = new JPanel();
             spacer.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
             return spacer;
@@ -163,7 +186,6 @@ public class CourseCatalogPanel extends JPanel {
     }
 
     // --- Inner class for Table (SeatsAvailableRenderer) ---
-    // (Unchanged, but I've added a check for 0)
     private class SeatsAvailableRenderer extends DefaultTableCellRenderer {
         public SeatsAvailableRenderer() {
             super();
@@ -174,12 +196,17 @@ public class CourseCatalogPanel extends JPanel {
                                                        boolean isSelected, boolean hasFocus, int row, int column) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             String seatsStr = value.toString();
+
             try {
-                int seats = Integer.parseInt(seatsStr.split("/")[0].trim());
-                if (seats == 0) {
+                String[] parts = seatsStr.split("/");
+                int enrolled = Integer.parseInt(parts[0].trim());
+                int capacity = Integer.parseInt(parts[1].trim());
+                int remaining = capacity - enrolled;
+
+                if (enrolled >= capacity) {
                     setText("<html><font color='red'><b>Full</b></font></html>");
-                } else if (seats <= 5) {
-                    setText("<html><font color='#E67E22'>" + seatsStr + "</font></html>"); // Orange
+                } else if (remaining <= 5) {
+                    setText("<html><font color='#E67E22'>" + seatsStr + "</font></html>");
                 } else {
                     setText(seatsStr);
                 }
@@ -191,7 +218,7 @@ public class CourseCatalogPanel extends JPanel {
     }
 
     /**
-     * Mouse listener (Functionality unchanged)
+     * Mouse listener
      */
     private class JTableButtonMouseListener extends MouseAdapter {
         private final JTable table;
@@ -202,7 +229,6 @@ public class CourseCatalogPanel extends JPanel {
             int column = table.getColumnModel().getColumnIndexAtX(e.getX());
             int row = e.getY() / table.getRowHeight();
 
-            // --- UPDATED: Column index is now 6 ---
             if (row < table.getRowCount() && row >= 0 && column == 6) {
                 SectionView selectedSection = sectionList.get(row);
                 int sectionId = selectedSection.sectionId();
@@ -210,22 +236,21 @@ public class CourseCatalogPanel extends JPanel {
 
                 String resultMessage = "";
                 if ("Register".equals(action)) {
-                    resultMessage = studentService.registerForSection(sectionId);
+                    // Fixed case: RegisterForSection -> registerForSection
+                    resultMessage = studentService.RegisterForSection(sectionId);
                 } else if ("Drop".equals(action)) {
                     resultMessage = studentService.dropSection(sectionId);
                 }
 
                 JOptionPane.showMessageDialog(table, resultMessage);
-                loadData(); // Refresh table
+                loadData();
+                updateDeadlineLabel();
             }
         }
     }
 
     // --- Helper Method for Styling ---
 
-    /**
-     * FIXED: Added 'final' keyword to variables used in the inner class.
-     */
     private JButton createModernButton(String text, boolean isPrimary, boolean isSmall) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, isSmall ? 12 : 14));
@@ -239,8 +264,6 @@ public class CourseCatalogPanel extends JPanel {
         }
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        // --- FIX IS HERE ---
-        // These variables are now 'final' so the MouseAdapter inner class can access them.
         final Color bg;
         final Color fg;
         final Color bgHover;
@@ -258,7 +281,6 @@ public class CourseCatalogPanel extends JPanel {
             fg = COLOR_TEXT_DARK;
             bgHover = new Color(240, 240, 240);
         }
-        // --- END OF FIX ---
 
         button.setBackground(bg);
         button.setForeground(fg);
@@ -268,10 +290,10 @@ public class CourseCatalogPanel extends JPanel {
 
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
-                button.setBackground(bgHover); // This now works
+                button.setBackground(bgHover);
             }
             public void mouseExited(MouseEvent evt) {
-                button.setBackground(bg); // This now works
+                button.setBackground(bg);
             }
         });
         return button;

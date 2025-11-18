@@ -41,16 +41,13 @@ public class AdminDAO {
 
     //This method adds the instructor profile to the instructor table in the StudentDB
     public boolean CreateInstructorProfile(Connection StudentDBConnection, int UserID, String FullName, String Email) throws Exception {
-
-        // UPDATED: SQL no longer includes the Department column
+        //SQL Query no longer includes the Department column
         String SQL = "INSERT INTO Instructors (UserID, FullName, Email) VALUES (?, ?, ?)";
-
         try (PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)) {
             Statement.setInt(1, UserID);
             Statement.setString(2, FullName);
             Statement.setString(3, Email);
             // The line for "Department" has been removed
-
             return Statement.executeUpdate() > 0;
         }
     }
@@ -177,12 +174,10 @@ public class AdminDAO {
         return Profiles;
     }
 
-    /**
-     * NEW METHOD: Fetches all sections for the admin panel table.
-     */
+
+    //This method is used to display the section on the admin SectionManagementPanel
     public List<AdminSectionView> getAllSectionsForView() {
         List<AdminSectionView> sections = new ArrayList<>();
-        // This query joins all 3 tables
         String sql = """
             SELECT c.CourseCode, s.SectionNumber, s.TimeSlot, s.EnrolledCount, s.Capacity, i.FullName
             FROM Sections s
@@ -190,21 +185,18 @@ public class AdminDAO {
             LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
             ORDER BY c.CourseCode, s.SectionNumber
             """;
-
-        try (Connection conn = DatabaseUtil.GetStudentConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
+        try (Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(sql); ResultSet Result = Statement.executeQuery()) {
+            while (Result.next()) {
                 sections.add(new AdminSectionView(
-                        rs.getString("CourseCode"),
-                        rs.getString("SectionNumber"),
-                        rs.getString("TimeSlot"),
-                        rs.getInt("EnrolledCount") + " / " + rs.getInt("Capacity"),
-                        rs.getString("FullName") != null ? rs.getString("FullName") : "TBA"
+                        Result.getString("CourseCode"),
+                        Result.getString("SectionNumber"),
+                        Result.getString("TimeSlot"),
+                        Result.getInt("EnrolledCount") + " / " + Result.getInt("Capacity"),
+                        Result.getString("FullName") != null ? Result.getString("FullName") : "TBA"
                 ));
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         return sections;
