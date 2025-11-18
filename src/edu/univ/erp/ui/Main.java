@@ -1,13 +1,13 @@
 package edu.univ.erp.ui;
 
-// UI Imports
+//UI Imports
 import edu.univ.erp.ui.auth.LoginDialog;
 import edu.univ.erp.ui.auth.ChangePasswordDialog;
 import edu.univ.erp.ui.student.*;
 import edu.univ.erp.ui.instructor.*;
 import edu.univ.erp.ui.admin.*;
 
-// Backend Imports
+//Backend Imports
 import edu.univ.erp.auth.UserDAO;
 import edu.univ.erp.data.*;
 import edu.univ.erp.service.*;
@@ -19,12 +19,12 @@ import java.util.List; // For notifications
 import java.util.function.Consumer;
 
 public class Main extends JFrame {
-
+    //Layout
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private JLabel welcomeLabel;
 
-    // DAOs
+    //DAOs
     private UserDAO userDAO;
     private AdminDAO adminDAO;
     private SettingsDAO settingsDAO;
@@ -39,11 +39,11 @@ public class Main extends JFrame {
     private InstructorService instructorService;
     private TranscriptService transcriptService;
 
-    // State
+    //States
     private String loggedInUserEmail = null;
     private int loggedInUserId = -1;
 
-    // Panels
+    //Panels
     private StudentDashboardPanel studentDashboard;
     private CourseCatalogPanel courseCatalog;
     private TimetablePanel timetablePanel;
@@ -56,13 +56,13 @@ public class Main extends JFrame {
     private SectionManagementPanel sectionManagementPanel;
 
     public Main() {
-        // Window setup
-        setTitle("University ERP");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(1024, 768));
-        setLocationRelativeTo(null);
+        //Window setup
+        setTitle("University ERP"); //Title of the window
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //Basically exit the program on closing the swing window
+        setMinimumSize(new Dimension(1024, 768)); //Minimum size of the window
+        setLocationRelativeTo(null); //Align window to the center
 
-        //Create instances of all the backends
+        //Create instances of all the DAO
         this.userDAO = new UserDAO();
         this.adminDAO = new AdminDAO();
         this.settingsDAO = new SettingsDAO();
@@ -70,25 +70,18 @@ public class Main extends JFrame {
         this.instructorDAO = new InstructorDAO();
         this.notificationDAO = new NotificationDAO(); // <-- NEW
 
-        // Services (Updated with new dependencies)
+        //Create instances of all the Services
         this.authService = new AuthService(userDAO, settingsDAO);
-
-        // AdminService now needs NotificationDAO
         this.adminService = new AdminService(userDAO, adminDAO, settingsDAO, notificationDAO);
-
-        // StudentService needs SettingsDAO (for Deadlines)
         this.studentService = new StudentService(studentDAO, settingsDAO);
-
-        // InstructorService needs SettingsDAO (for Maintenance Mode checks)
         this.instructorService = new InstructorService(instructorDAO, settingsDAO);
-
         this.transcriptService = new TranscriptService(studentDAO);
 
-        // --- 2. UI SETUP ---
+        //UI Setup
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // Navigation Commands
+        //Navigation Commands
         Runnable showStudentHome = () -> cardLayout.show(mainPanel, "student_dashboard");
         Runnable showCatalog = () -> cardLayout.show(mainPanel, "catalog");
         Runnable showTimetable = () -> cardLayout.show(mainPanel, "timetable");
@@ -114,7 +107,7 @@ public class Main extends JFrame {
         Runnable showCourseManagement = () -> cardLayout.show(mainPanel, "admin_courses");
         Runnable showSectionManagement = () -> cardLayout.show(mainPanel, "admin_sections");
 
-        // Initialize Panels
+        //Initialize Panels
         studentDashboard = new StudentDashboardPanel(showCatalog, showTimetable, showGrades);
         courseCatalog = new CourseCatalogPanel(showStudentHome, studentService);
         timetablePanel = new TimetablePanel(showStudentHome, studentService);
@@ -128,7 +121,7 @@ public class Main extends JFrame {
         courseManagementPanel = new CourseManagementPanel(showAdminHome, adminService);
         sectionManagementPanel = new SectionManagementPanel(showAdminHome, adminService);
 
-        // Add Panels to CardLayout
+        //Add Panels to CardLayout
         mainPanel.add(studentDashboard, "student_dashboard");
         mainPanel.add(courseCatalog, "catalog");
         mainPanel.add(timetablePanel, "timetable");
@@ -139,16 +132,13 @@ public class Main extends JFrame {
         mainPanel.add(userManagementPanel, "admin_users");
         mainPanel.add(courseManagementPanel, "admin_courses");
         mainPanel.add(sectionManagementPanel, "admin_sections");
-
         add(mainPanel);
 
-        // Create the top menu bar (Now includes Notifications)
+        //Create the top menu bar(Notification and file)
         createMenuBar();
     }
 
-    /**
-     * Logic to handle successful login and routing.
-     */
+    //This handles the operations on logging in and
     public void onLoginSuccess(String role, String username, int userId) {
         this.loggedInUserEmail = username;
         this.loggedInUserId = userId; // UserID from AuthDB
@@ -275,9 +265,9 @@ public class Main extends JFrame {
                 popup.add(item);
             }
         }
-
         popup.show(source, 0, source.getHeight());
     }
+
 
     private void logout() {
         this.loggedInUserEmail = null;
@@ -286,6 +276,7 @@ public class Main extends JFrame {
         this.dispose();
         showLoginDialog(true);
     }
+
 
     public static void main(String[] args) {
         try {
@@ -298,6 +289,7 @@ public class Main extends JFrame {
         } catch (Exception e) { /* Fallback */ }
         SwingUtilities.invokeLater(() -> showLoginDialog(false));
     }
+
 
     private static void showLoginDialog(boolean isLogout) {
         Main mainApp = new Main();

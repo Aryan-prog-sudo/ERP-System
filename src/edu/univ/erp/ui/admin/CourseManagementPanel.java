@@ -16,9 +16,10 @@ import java.util.List; // <-- NEW IMPORT
  * Admin panel for managing courses.
  * UPDATED: Beautified and now loads data from the AdminService.
  */
+//This admin panel manages the Course
 public class CourseManagementPanel extends JPanel {
 
-    // --- Color Theme ---
+    //Color Themes
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
     private static final Color COLOR_BACKGROUND = Color.WHITE;
@@ -31,7 +32,7 @@ public class CourseManagementPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTextField codeField, titleField, creditsField;
 
-    private AdminService adminService;
+    private AdminService adminService; //This connects the frontend to the backend
 
     public CourseManagementPanel(Runnable onGoBack, AdminService adminService) {
         this.adminService = adminService;
@@ -160,6 +161,7 @@ public class CourseManagementPanel extends JPanel {
     /**
      * UPDATED: createTablePanel, now loads no data by default
      */
+    //This method created table on the right of the section where we create the codes
     private JPanel createTablePanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 15));
         panel.setOpaque(false); // Transparent background
@@ -171,9 +173,8 @@ public class CourseManagementPanel extends JPanel {
 
         String[] columnNames = {"Code", "Title", "Credits"};
 
-        // --- UPDATED: No more hardcoded data ---
+        //Table for Courses
         tableModel = new DefaultTableModel(null, columnNames) {
-            @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
 
