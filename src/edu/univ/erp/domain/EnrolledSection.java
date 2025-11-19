@@ -1,8 +1,10 @@
 package edu.univ.erp.domain;
 
 public record EnrolledSection(
+        int sectionId,
         String courseCode,
         String courseTitle,
-        String timeSlot,
-        String location // (Note: We'll add 'location' to your Sections table)
+        int credits,
+        String instructorName,
+        String timeSlot
 ) {}

@@ -49,38 +49,39 @@ public class StudentDAO {
         return sections;
     }
 
-    /**
-     * Fetches a student's timetable.
-     * (We'll assume a 'Location' column exists in Sections for this)
-     */
+
+    //This fetches the timetable of the student
     public List<EnrolledSection> getTimetable(int studentId) {
-        List<EnrolledSection> timetable = new ArrayList<>();
+        List<EnrolledSection> schedule = new ArrayList<>();
+        // UPDATED SQL: Removed any reference to Location
         String sql = """
-            SELECT c.CourseCode, c.CourseTitle, s.TimeSlot, 'TBA' AS Location 
+            SELECT s.SectionID, c.CourseCode, c.CourseTitle, c.Credits, i.FullName, s.TimeSlot
             FROM Enrollments e
             JOIN Sections s ON e.SectionID = s.SectionID
             JOIN Course c ON s.CourseID = c.CourseID
+            LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
             WHERE e.StudentID = ?
+            ORDER BY s.TimeSlot
             """;
-        // Note: I've hardcoded Location as 'TBA'.
-        // You would need to add a Location column to your Sections table to fix this.
-
         try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, studentId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    timetable.add(new EnrolledSection(
+                    schedule.add(new EnrolledSection(
+                            rs.getInt("SectionID"),
                             rs.getString("CourseCode"),
                             rs.getString("CourseTitle"),
-                            rs.getString("TimeSlot"),
-                            rs.getString("Location")
+                            rs.getInt("Credits"),
+                            rs.getString("FullName") != null ? rs.getString("FullName") : "TBA",
+                            rs.getString("TimeSlot")
+                            // REMOVED: Location argument
                     ));
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return timetable;
+        return schedule;
     }
 
 
@@ -91,7 +92,6 @@ public class StudentDAO {
      */
     public List<Grade> getGrades(int studentId) {
         List<Grade> grades = new ArrayList<>();
-        // --- THIS IS THE FIXED QUERY ---
         String sql = """
             SELECT 
                 c.CourseCode, c.CourseTitle, c.Credits, g.FinalGrade

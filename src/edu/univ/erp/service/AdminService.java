@@ -225,4 +225,22 @@ public class AdminService {
     public String GetSystemDeadline(){
         return settingsDAO.GetDeadline();
     }
+
+
+    //This is basically the wrapper for the DAO function
+    public String RemoveSection(int SectionID, int CurrentEnrollment){
+        if(CurrentEnrollment>0){
+            return "Warning: Cannot delete section. There are "+ CurrentEnrollment + "Students enrolled";
+        }
+        boolean Success = adminDAO.DeleteSection(SectionID);
+        if(Success){
+            System.out.println("Section removed success fully"+ SectionID);
+            notificationDAO.AddNotification("Section Removed with ID: "+ SectionID);
+            return "Success";
+        }
+        else{
+            System.out.println("Couldn't remove section"+ SectionID);
+            return "Error: Failed to delete section from database";
+        }
+    }
 }

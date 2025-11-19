@@ -8,13 +8,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
 
-/**
- * Student home page dashboard.
- * UPDATED: Beautified with a modern look and feel.
- */
+
 public class StudentDashboardPanel extends JPanel {
 
-    // --- Color Theme ---
+    //Color Theme
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
     private static final Color COLOR_BACKGROUND = Color.WHITE;
@@ -53,8 +50,8 @@ public class StudentDashboardPanel extends JPanel {
         cardsPanel.setBackground(COLOR_BACKGROUND);
         GridBagConstraints gbc = new GridBagConstraints();
 
-        // --- Card 1: Register for Courses ---
-        JButton registerButton = createModernButton("Course Catalog", true);
+        //Card 1: Register for Courses
+        JButton registerButton = createModernButton("Course Catalog", false);
         registerButton.addActionListener(e -> onGoToCatalog.run());
         JPanel card1 = createDashboardCard(
                 createIconLabel("book.png", "📚"), // Icon for courses
@@ -63,7 +60,7 @@ public class StudentDashboardPanel extends JPanel {
                 registerButton
         );
 
-        // --- Card 2: View My Timetable ---
+        //Card 2: View My Timetable
         JButton scheduleButton = createModernButton("View Schedule", false);
         scheduleButton.addActionListener(e -> onGoToTimetable.run());
         JPanel card2 = createDashboardCard(
@@ -73,7 +70,7 @@ public class StudentDashboardPanel extends JPanel {
                 scheduleButton
         );
 
-        // --- Card 3: Check My Grades ---
+        //Card 3: Check My Grades
         JButton gradesButton = createModernButton("View Grades", false);
         gradesButton.addActionListener(e -> onGoToGrades.run());
         JPanel card3 = createDashboardCard(
@@ -83,8 +80,7 @@ public class StudentDashboardPanel extends JPanel {
                 gradesButton
         );
 
-        // --- Add cards to GridBagLayout ---
-        // (Functionality is the same, just adding the cards)
+        //Add cards to GridBagLayout
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
@@ -137,7 +133,7 @@ public class StudentDashboardPanel extends JPanel {
 
         card.add(topPanel, BorderLayout.NORTH);
 
-        // --- Button ---
+        // Button
         button.setPreferredSize(new Dimension(button.getPreferredSize().width, 40));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));

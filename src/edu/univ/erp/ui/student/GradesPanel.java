@@ -15,13 +15,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.List;
 
-/**
- * Grades Panel.
- * UPDATED: Beautified with a modern look and feel.
- */
-public class GradesPanel extends JPanel {
 
-    // --- Color Theme ---
+public class GradesPanel extends JPanel {
+    //Color Theme
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
     private static final Color COLOR_BACKGROUND = Color.WHITE;
@@ -47,9 +43,7 @@ public class GradesPanel extends JPanel {
         loadData();
     }
 
-    /**
-     * 3. New method to fetch data from the service
-     */
+
     private void loadData() {
         // This will now work correctly thanks to the DAO fix
         List<Grade> grades = studentService.getGrades();
@@ -64,9 +58,9 @@ public class GradesPanel extends JPanel {
         }
     }
 
-    /**
-     * UPDATED: createHeaderPanel, now styled
-     */
+
+    //This creates the header panel on the top of grades panel
+    //It also contains the download transcript option
     private JPanel createHeaderPanel(Runnable onGoBack) {
         JPanel headerPanel = new JPanel(new BorderLayout(20, 0));
         headerPanel.setBackground(COLOR_BACKGROUND);
@@ -123,31 +117,28 @@ public class GradesPanel extends JPanel {
         return scrollPane;
     }
 
-    /**
-     * Logic for the "Download Transcript" button (Functionality unchanged)
-     */
+
+    //This is the code for the button download transcript
+    //It basically calls the JFileChooser and rest of the logic is handled in transcript service
     private void onDownloadTranscript() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Save Transcript");
         fileChooser.setSelectedFile(new File("transcript.csv"));
-
         if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             File fileToSave = fileChooser.getSelectedFile();
             try (FileWriter writer = new FileWriter(fileToSave)) {
-
                 int studentId = studentService.getCurrentStudentId();
                 transcriptService.generateCsvTranscript(studentId, writer);
-
                 JOptionPane.showMessageDialog(this, "Transcript saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Error saving file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
         }
     }
 
-    // --- Helper Method for Styling ---
-
+    //Helper Method for Styling
     private JButton createModernButton(String text, boolean isPrimary) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -159,13 +150,11 @@ public class GradesPanel extends JPanel {
         Color bg = isPrimary ? COLOR_PRIMARY : COLOR_BACKGROUND;
         Color fg = isPrimary ? Color.WHITE : COLOR_TEXT_DARK;
         Color bgHover = isPrimary ? COLOR_PRIMARY_DARK : new Color(240, 240, 240);
-
         button.setBackground(bg);
         button.setForeground(fg);
         if (!isPrimary) {
             button.setBorder(new LineBorder(COLOR_BORDER, 1));
         }
-
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
                 button.setBackground(bgHover);

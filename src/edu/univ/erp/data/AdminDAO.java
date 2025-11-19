@@ -9,6 +9,7 @@ import edu.univ.erp.domain.AdminSectionView;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -179,7 +180,7 @@ public class AdminDAO {
     public List<AdminSectionView> getAllSectionsForView() {
         List<AdminSectionView> sections = new ArrayList<>();
         String sql = """
-            SELECT c.CourseCode, s.SectionNumber, s.TimeSlot, s.EnrolledCount, s.Capacity, i.FullName
+            SELECT s.SectionID, c.CourseCode, s.SectionNumber, s.TimeSlot, s.EnrolledCount, s.Capacity, i.FullName
             FROM Sections s
             JOIN Course c ON s.CourseID = c.CourseID
             LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
@@ -188,10 +189,12 @@ public class AdminDAO {
         try (Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(sql); ResultSet Result = Statement.executeQuery()) {
             while (Result.next()) {
                 sections.add(new AdminSectionView(
+                        Result.getInt("SectionID"),
                         Result.getString("CourseCode"),
                         Result.getString("SectionNumber"),
                         Result.getString("TimeSlot"),
-                        Result.getInt("EnrolledCount") + " / " + Result.getInt("Capacity"),
+                        Result.getInt("EnrolledCount"),
+                        Result.getInt("Capacity"),
                         Result.getString("FullName") != null ? Result.getString("FullName") : "TBA"
                 ));
             }
@@ -200,6 +203,19 @@ public class AdminDAO {
             e.printStackTrace();
         }
         return sections;
+    }
+
+
+    //Removes a section from the database
+    public boolean DeleteSection(int SectionID){
+        String SQL = "DELETE FROM Sections WHERE SectionID = ?";
+        try(Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)){
+            Statement.setInt(1, SectionID);
+            return Statement.executeUpdate()>0;
+        }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 package edu.univ.erp.ui.admin;
 
-import edu.univ.erp.domain.AdminSectionView; // <-- NEW
+import edu.univ.erp.domain.AdminSectionView;
 import edu.univ.erp.domain.Course;
 import edu.univ.erp.domain.Instructor;
 import edu.univ.erp.service.AdminService;
@@ -8,45 +8,43 @@ import edu.univ.erp.service.AdminService;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ComponentAdapter; // <-- NEW
-import java.awt.event.ComponentEvent; // <-- NEW
-import java.awt.event.MouseAdapter; // <-- NEW
-import java.awt.event.MouseEvent; // <-- NEW
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 /**
  * Admin panel for managing sections.
- * UPDATED: Beautified and all 4 bugs fixed.
+ * UPDATED: Now includes "Remove" button with validation logic.
  */
 public class SectionManagementPanel extends JPanel {
 
-    // --- Color Theme ---
+    // ... (Colors and fields remain the same) ...
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
     private static final Color COLOR_BACKGROUND = Color.WHITE;
     private static final Color COLOR_TEXT_DARK = new Color(30, 30, 30);
-    private static final Color COLOR_TEXT_LIGHT = new Color(140, 140, 140);
     private static final Color COLOR_BORDER = new Color(220, 220, 220);
     private static final Color COLOR_TEXT_FIELD_BG = new Color(248, 248, 248);
+    private static final Color COLOR_DELETE = new Color(220, 50, 50);
 
     private JTable sectionsTable;
     private DefaultTableModel tableModel;
-
-    // --- UPDATED: ComboBoxes are now <Object> to hold custom strings ---
     private JComboBox<Object> courseComboBox;
     private JComboBox<Object> instructorComboBox;
-
     private JTextField sectionNumField, timeField, capacityField;
     private AdminService adminService;
 
-    // --- Custom String placeholders for dropdowns ---
+    private List<AdminSectionView> currentSectionList; // <-- Store data for ID lookup
+
     private final String COURSE_PROMPT = "--- Select a Course ---";
     private final String COURSE_EMPTY = "x---Empty (Create a Course First)---x";
     private final String INST_PROMPT = "--- Select an Instructor ---";
     private final String INST_EMPTY = "x---Empty (Create an Instructor First)---x";
-
 
     public SectionManagementPanel(Runnable onGoBack, AdminService adminService) {
         this.adminService = adminService;
@@ -70,31 +68,24 @@ public class SectionManagementPanel extends JPanel {
 
         add(mainContentPanel, BorderLayout.CENTER);
 
-        // --- FIX 1: Add a ComponentListener to reload data when panel is shown ---
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
-                System.out.println("Section panel shown, refreshing all data...");
                 loadAllData();
             }
         });
 
-        // Initial load
         loadAllData();
     }
 
-    /**
-     * NEW: Helper to reload all data for the panel.
-     */
     private void loadAllData() {
         loadDropdownData();
         loadSectionsData();
     }
 
-    /**
-     * UPDATED: createHeaderPanel, now styled and has Refresh button
-     */
+    // ... (createHeaderPanel and createFormPanel remain exactly the same) ...
     private JPanel createHeaderPanel(Runnable onGoBack) {
+        // (Copy previous code: Header with Refresh button)
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BACKGROUND);
 
@@ -106,7 +97,6 @@ public class SectionManagementPanel extends JPanel {
         titleLabel.setForeground(COLOR_TEXT_DARK);
         titleLabel.setHorizontalAlignment(JLabel.CENTER);
 
-        // --- FIX 1: Add a Refresh Button ---
         JButton refreshButton = createModernButton("Refresh", false);
         refreshButton.addActionListener(e -> loadAllData());
 
@@ -117,10 +107,8 @@ public class SectionManagementPanel extends JPanel {
         return headerPanel;
     }
 
-    /**
-     * UPDATED: createFormPanel, now styled
-     */
     private JPanel createFormPanel() {
+        // (Copy previous code: Form fields)
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(COLOR_BACKGROUND);
         panel.setBorder(BorderFactory.createCompoundBorder(
@@ -142,7 +130,7 @@ public class SectionManagementPanel extends JPanel {
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
         panel.add(new JLabel("Course"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
-        courseComboBox = new JComboBox<>(); // Now JComboBox<Object>
+        courseComboBox = new JComboBox<>();
         courseComboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
         courseComboBox.setBackground(COLOR_BACKGROUND);
         panel.add(courseComboBox, gbc);
@@ -172,7 +160,7 @@ public class SectionManagementPanel extends JPanel {
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
         panel.add(new JLabel("Instructor"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 20, 0);
-        instructorComboBox = new JComboBox<>(); // Now JComboBox<Object>
+        instructorComboBox = new JComboBox<>();
         instructorComboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
         instructorComboBox.setBackground(COLOR_BACKGROUND);
         panel.add(instructorComboBox, gbc);
@@ -190,7 +178,7 @@ public class SectionManagementPanel extends JPanel {
     }
 
     /**
-     * UPDATED: createTablePanel, now loads no data by default
+     * UPDATED: Table now includes "Actions" column.
      */
     private JPanel createTablePanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 15));
@@ -201,9 +189,9 @@ public class SectionManagementPanel extends JPanel {
         title.setForeground(COLOR_TEXT_DARK);
         panel.add(title, BorderLayout.NORTH);
 
-        String[] columnNames = {"Course", "Section", "Time", "Capacity", "Instructor"};
+        // --- NEW COLUMN: Actions ---
+        String[] columnNames = {"Course", "Section", "Time", "Capacity", "Instructor", "Actions"};
 
-        // --- UPDATED: No more hardcoded data ---
         tableModel = new DefaultTableModel(null, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
@@ -214,6 +202,10 @@ public class SectionManagementPanel extends JPanel {
         sectionsTable.setRowHeight(35);
         sectionsTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
 
+        // Add Button Renderer
+        sectionsTable.getColumnModel().getColumn(5).setCellRenderer(new ButtonRenderer());
+        sectionsTable.addMouseListener(new TableButtonListener(sectionsTable));
+
         JScrollPane scrollPane = new JScrollPane(sectionsTable);
         scrollPane.setBorder(new LineBorder(COLOR_BORDER));
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -221,76 +213,56 @@ public class SectionManagementPanel extends JPanel {
         return panel;
     }
 
-    /**
-     * UPDATED: Loads data into JComboBoxes with smart logic.
-     * Fixes Bugs 2 & 3.
-     */
     private void loadDropdownData() {
-        // --- Load Courses ---
-        List<Course> courses = adminService.getAllCourses();
-        courseComboBox.removeAllItems(); // Clear old items
-
-        if (courses.isEmpty()) {
-            courseComboBox.addItem(COURSE_EMPTY);
-        } else {
+        // (Copy previous code: logic for populating dropdowns)
+        java.util.List<Course> courses = adminService.getAllCourses();
+        courseComboBox.removeAllItems();
+        if (courses.isEmpty()) courseComboBox.addItem(COURSE_EMPTY);
+        else {
             courseComboBox.addItem(COURSE_PROMPT);
-            for (Course c : courses) {
-                courseComboBox.addItem(c);
-            }
+            for (Course c : courses) courseComboBox.addItem(c);
         }
 
-        // --- Load Instructors ---
-        List<Instructor> instructors = adminService.getAllInstructors();
-        instructorComboBox.removeAllItems(); // Clear old items
-
-        if (instructors.isEmpty()) {
-            instructorComboBox.addItem(INST_EMPTY);
-        } else {
+        java.util.List<Instructor> instructors = adminService.getAllInstructors();
+        instructorComboBox.removeAllItems();
+        if (instructors.isEmpty()) instructorComboBox.addItem(INST_EMPTY);
+        else {
             instructorComboBox.addItem(INST_PROMPT);
-            for (Instructor i : instructors) {
-                instructorComboBox.addItem(i);
-            }
+            for (Instructor i : instructors) instructorComboBox.addItem(i);
         }
     }
 
     /**
-     * NEW: Loads data from the service into the table.
-     * Fixes Bug 4 (stale table).
+     * UPDATED: Stores list for ID lookup.
      */
     private void loadSectionsData() {
-        List<AdminSectionView> sections = adminService.GetAllSectionsForView();
-        tableModel.setRowCount(0); // Clear table
+        this.currentSectionList = adminService.GetAllSectionsForView(); // Store ref
+        tableModel.setRowCount(0);
 
-        for (AdminSectionView s : sections) {
+        for (AdminSectionView s : currentSectionList) {
             tableModel.addRow(new Object[]{
                     s.CourseCode(),
                     s.SectionNumber(),
                     s.TimeSlot(),
-                    s.Capacity(),
-                    s.InstructorName()
+                    s.EnrolledCount() + " / " + s.Capacity(), // Show formatted string
+                    s.InstructorName(),
+                    "Remove" // Button text
             });
         }
     }
 
-    /**
-     * UPDATED: Calls the AdminService and now validates dropdowns.
-     * Fixes Bug 4 (refreshing).
-     */
     private void onCreateSection() {
-        // --- UPDATED: Validate dropdowns ---
+        // (Copy previous code: Validation and Create call)
         Object courseObj = courseComboBox.getSelectedItem();
         Object instObj = instructorComboBox.getSelectedItem();
         String section = sectionNumField.getText();
         String time = timeField.getText();
         String capacityStr = capacityField.getText();
 
-        // Check if a valid item is selected
         if (!(courseObj instanceof Course) || !(instObj instanceof Instructor)) {
             JOptionPane.showMessageDialog(this, "Please select a valid course and instructor.", "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        // Safe to cast
         Course course = (Course) courseObj;
         Instructor instructor = (Instructor) instObj;
 
@@ -302,25 +274,68 @@ public class SectionManagementPanel extends JPanel {
         boolean success = adminService.createNewSection(course, instructor, section, time, capacityStr);
 
         if (success) {
-            JOptionPane.showMessageDialog(this, "Section '" + course.courseCode() + "-" + section + "' added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-
-            // --- FIX 4: Refresh all data (including table) ---
+            JOptionPane.showMessageDialog(this, "Section Added!", "Success", JOptionPane.INFORMATION_MESSAGE);
             loadAllData();
-
-            // Clear form fields
             sectionNumField.setText("");
             timeField.setText("");
             capacityField.setText("");
             courseComboBox.setSelectedIndex(0);
             instructorComboBox.setSelectedIndex(0);
-
         } else {
-            JOptionPane.showMessageDialog(this, "Failed to create section. Section number may already exist for this course.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to create section.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // --- RENDERER AND LISTENER FOR BUTTON ---
 
-    // --- Helper Methods (Copied from other styled panels) ---
+    class ButtonRenderer extends DefaultTableCellRenderer {
+        JButton renderButton;
+        public ButtonRenderer() {
+            renderButton = new JButton("Remove");
+            renderButton.setOpaque(true);
+            renderButton.setBackground(COLOR_DELETE);
+            renderButton.setForeground(Color.WHITE);
+            renderButton.setFont(new Font("SansSerif", Font.BOLD, 12));
+        }
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            return renderButton;
+        }
+    }
+
+    class TableButtonListener extends MouseAdapter {
+        private final JTable table;
+        public TableButtonListener(JTable table) { this.table = table; }
+
+        public void mouseClicked(MouseEvent e) {
+            int column = table.getColumnModel().getColumnIndexAtX(e.getX());
+            int row = e.getY() / table.getRowHeight();
+
+            if (row < table.getRowCount() && row >= 0 && column == 5) {
+                // Retrieve the ID using the row index
+                AdminSectionView section = currentSectionList.get(row);
+
+                // Confirm deletion
+                int confirm = JOptionPane.showConfirmDialog(table,
+                        "Are you sure you want to remove section " + section.SectionNumber() + " of " + section.CourseCode() + "?",
+                        "Confirm Removal", JOptionPane.YES_NO_OPTION);
+
+                if (confirm == JOptionPane.YES_OPTION) {
+                    // CALL SERVICE with ID and Count
+                    String result = adminService.RemoveSection(section.SectionID(), section.EnrolledCount());
+
+                    if ("Success".equals(result)) {
+                        JOptionPane.showMessageDialog(table, "Section Removed.");
+                        loadAllData();
+                    } else {
+                        // Show warning if not empty
+                        JOptionPane.showMessageDialog(table, result, "Cannot Remove", JOptionPane.WARNING_MESSAGE);
+                    }
+                }
+            }
+        }
+    }
+
+    // --- Helper Methods ---
 
     private JButton createModernButton(String text, boolean isPrimary) {
         JButton button = new JButton(text);
@@ -330,9 +345,9 @@ public class SectionManagementPanel extends JPanel {
         button.setBorder(new EmptyBorder(5, 15, 5, 15));
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        Color bg = isPrimary ? COLOR_PRIMARY : COLOR_BACKGROUND;
-        Color fg = isPrimary ? Color.WHITE : COLOR_TEXT_DARK;
-        Color bgHover = isPrimary ? COLOR_PRIMARY_DARK : new Color(240, 240, 240);
+        final Color bg = isPrimary ? COLOR_PRIMARY : COLOR_BACKGROUND;
+        final Color fg = isPrimary ? Color.WHITE : COLOR_TEXT_DARK;
+        final Color bgHover = isPrimary ? COLOR_PRIMARY_DARK : new Color(240, 240, 240);
 
         button.setBackground(bg);
         button.setForeground(fg);
