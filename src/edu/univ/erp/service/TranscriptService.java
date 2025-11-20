@@ -17,7 +17,7 @@ public class TranscriptService {
         this.studentDAO = studentDAO;
     }
 
-     //Generates a CSV transcript and writes it to the provided Writer.
+    //Generates a CSV transcript and writes it to the provided Writer.
     public void generateCsvTranscript(int studentId, Writer writer) {
         try (CSVWriter csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END)) {
             String[] header = {"Course Code", "Course Title", "Credits", "Grade"};
@@ -32,12 +32,9 @@ public class TranscriptService {
                 };
                 csvWriter.writeNext(row);
             }
-
-            // (You could add a final row for GPA calculation here)
-
             logger.info("CSV Transcript generated for student " + studentId);
-
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             logger.severe("Failed to generate CSV: " + e.getMessage());
             e.printStackTrace();
         }

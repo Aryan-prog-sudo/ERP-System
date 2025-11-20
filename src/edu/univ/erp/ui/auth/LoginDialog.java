@@ -86,7 +86,7 @@ public class LoginDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         gbc.gridy++; gbc.insets = new Insets(15, 0, 0, 0);
-        JLabel emailLabel = new JLabel("Email");
+        JLabel emailLabel = new JLabel("UseName");
         emailLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
         emailLabel.setForeground(COLOR_TEXT_DARK);
         panel.add(emailLabel, gbc);

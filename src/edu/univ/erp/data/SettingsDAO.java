@@ -8,6 +8,8 @@ import java.sql.ResultSet;
 
 //This class is basically used to access the SystemSetting table in the StudentDB
 //That table just contains weather the maintenance mode is on or off
+//It now also contains the option to set deadline about adding or dropping courses
+//The system setting table in the StudentDB contains two things - the maintenance mode(ON or OFF) and the Deadline info
 public class SettingsDAO {
     public boolean IsMaintenanceModeOn(){
         String SQL = "SELECT SettingValue FROM SystemSettings WHERE SettingKey = 'MaintenanceMode'";
@@ -57,6 +59,7 @@ public class SettingsDAO {
     }
 
 
+    //Used to change the deadline value in the table
     public boolean SetDeadline(String DateString){
         String UpdateSQL = "UPDATE SystemSettings SET SettingValue = ? WHERE SettingKey = 'Deadline'";
         try(Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(UpdateSQL)){

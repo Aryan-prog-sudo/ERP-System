@@ -26,6 +26,8 @@ public class StudentDAO {
             JOIN Course c ON s.CourseID = c.CourseID
             LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
             """;
+        //Select all the details about the sections using the Enrollment table
+        //The enrollment table contains all the enrollments ie a mapping of studentId with the SectionId they are enrolled in
         try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, studentId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -86,10 +88,6 @@ public class StudentDAO {
 
 
     //This code fetches the grades of the student
-    /**
-     * This query now starts from Enrollments and LEFT JOINs Grades
-     * to show courses even if they are still "In Progress".
-     */
     public List<Grade> getGrades(int studentId) {
         List<Grade> grades = new ArrayList<>();
         String sql = """
@@ -101,11 +99,7 @@ public class StudentDAO {
             LEFT JOIN Grades g ON e.StudentID = g.StudentID AND e.SectionID = g.SectionID
             WHERE e.StudentID = ?
             """;
-        // --- END OF FIX ---
-
-        try (Connection conn = DatabaseUtil.GetStudentConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, studentId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -113,12 +107,13 @@ public class StudentDAO {
                             rs.getString("CourseCode"),
                             rs.getString("CourseTitle"),
                             rs.getInt("Credits"),
-                            // This logic correctly handles NULL grades
                             rs.getString("FinalGrade") != null ? rs.getString("FinalGrade") : "In Progress"
+                            //If the FinalGrade is null in the table it shows the student that grades are in progress
                     ));
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         return grades;
@@ -129,8 +124,7 @@ public class StudentDAO {
     //The StudentID is in the Student Table while the UserID is in the User table
     public int getStudentIdFromUserId(int userId) {
         String sql = "SELECT StudentID FROM Students WHERE UserID = ?";
-        try (Connection conn = DatabaseUtil.GetStudentConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, userId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -138,7 +132,8 @@ public class StudentDAO {
                     return rs.getInt("StudentID");
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         return -1; // Not found

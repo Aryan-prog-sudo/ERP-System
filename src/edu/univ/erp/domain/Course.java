@@ -7,7 +7,8 @@ public record Course(
         String courseTitle,
         int credits
 ) {
-    // We override toString() so it looks nice in the JComboBox
+
+    //This is to support JComboBox
     @Override
     public String toString() {
         return courseCode + " - " + courseTitle;

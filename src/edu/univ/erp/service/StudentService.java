@@ -14,6 +14,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Logger;
 
+
+//This class connects the UI on the frontend to the backend logic
+//This basically contains wrapper for the functions in the DAO files
 public class StudentService {
     private static final Logger logger = Logger.getLogger(StudentService.class.getName());
     private StudentDAO studentDAO;
@@ -54,11 +57,10 @@ public class StudentService {
     //This method is used to register for cases by the students
     //It is called in the CourseCatalogPanel when registering for courses
     public String RegisterForSection(int sectionId) {
-        if (settingsDAO.IsMaintenanceModeOn()) {
+        if (settingsDAO.IsMaintenanceModeOn()) { //Check for maintenance mode
             return "Registration failed: System is in Maintenance Mode.";
         }
-
-        if(DeadlinePassed()){
+        if(DeadlinePassed()){ //Check for deadline
             return "Registration deadline has passed. The deadline was: "+ GetDeadlineString() +"Now no longer allowed to register";
         }
         Connection conn = null;
@@ -100,7 +102,14 @@ public class StudentService {
             return "Successfully registered!";
         }
         catch (Exception e) {
-            try { if (conn != null) conn.rollback(); } catch (Exception re) { re.printStackTrace(); }
+            try {
+                if(conn != null) {
+                    conn.rollback();
+                }
+            }
+            catch (Exception re) {
+                re.printStackTrace();
+            }
             if (e.getMessage().contains("Duplicate entry")) {
                 return "Registration failed: You are already enrolled in this section.";
             }
@@ -108,11 +117,19 @@ public class StudentService {
             return "Registration failed: A database error occurred.";
         }
         finally {
-            try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace(); }
+            try {
+                if(conn != null){
+                    conn.close();
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
 
+    //This function removes the section from the user
     public String dropSection(int sectionId) {
         if (settingsDAO.IsMaintenanceModeOn()) {
             return "Drop failed: System is in Maintenance Mode.";
@@ -177,6 +194,7 @@ public class StudentService {
     }
 
 
+    //Wrapper for GetDeadline
     public String GetDeadlineString(){
         return settingsDAO.GetDeadline();
     }

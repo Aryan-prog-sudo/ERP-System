@@ -22,6 +22,7 @@ public class InstructorDAO {
             JOIN Course c ON s.CourseID = c.CourseID
             WHERE s.InstructorID = ?
             """;
+        //This query finds all the sections where the instructor is same as the provided one
         try (Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = StudentDBConnection.prepareStatement(SQL)){
             stmt.setInt(1, instructorId);
             try (ResultSet Result = stmt.executeQuery()) {
@@ -94,6 +95,7 @@ public class InstructorDAO {
                 FinalScore = VALUES(FinalScore),
                 FinalGrade = VALUES(FinalGrade)
             """;
+        //This query inserts into the grades table the grades of Quiz, Midterm and EndTerm as well as the FinalGrade(A,B,C,D) and the finalScore(Numerical value)
         try (Connection conn = DatabaseUtil.GetStudentConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, studentId);
             stmt.setInt(2, sectionId);

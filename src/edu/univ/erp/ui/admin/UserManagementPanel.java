@@ -132,7 +132,7 @@ public class UserManagementPanel extends JPanel {
         panel.add(nameField, gbc);
 
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
-        panel.add(new JLabel("Email"), gbc);
+        panel.add(new JLabel("UserName"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
         emailField = createModernTextField(20);
         panel.add(emailField, gbc);
@@ -169,7 +169,7 @@ public class UserManagementPanel extends JPanel {
         title.setForeground(COLOR_TEXT_DARK);
         panel.add(title, BorderLayout.NORTH);
 
-        String[] columnNames = {"Name", "Email", "Role"};
+        String[] columnNames = {"Name", "UserName", "Role"};
 
         // --- UPDATED: No more hardcoded data ---
         tableModel = new DefaultTableModel(null, columnNames) {
@@ -225,7 +225,7 @@ public class UserManagementPanel extends JPanel {
                     "Success", JOptionPane.INFORMATION_MESSAGE);
         } else {
             JOptionPane.showMessageDialog(this,
-                    "Failed to create user. The email may already be in use.",
+                    "Failed to create user. The UserName may already be in use.",
                     "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }

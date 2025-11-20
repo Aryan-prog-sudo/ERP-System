@@ -12,10 +12,7 @@ import java.awt.event.MouseEvent;
 import java.net.URL;
 import java.util.List; // <-- NEW IMPORT
 
-/**
- * Admin panel for managing courses.
- * UPDATED: Beautified and now loads data from the AdminService.
- */
+
 //This admin panel manages the Course
 public class CourseManagementPanel extends JPanel {
 
@@ -43,7 +40,7 @@ public class CourseManagementPanel extends JPanel {
 
         add(createHeaderPanel(onGoBack), BorderLayout.NORTH);
 
-        // Main content panel (Form + Table)
+        //Main content panel (Form + Table)
         JPanel mainContentPanel = new JPanel(new GridBagLayout());
         mainContentPanel.setBackground(COLOR_BACKGROUND);
         GridBagConstraints gbc = new GridBagConstraints();

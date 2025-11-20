@@ -133,7 +133,6 @@ public class Main extends JFrame {
         mainPanel.add(courseManagementPanel, "admin_courses");
         mainPanel.add(sectionManagementPanel, "admin_sections");
         add(mainPanel);
-
         //Create the top menu bar(Notification and file)
         createMenuBar();
     }

@@ -1,8 +1,6 @@
 package edu.univ.erp.domain;
 
-/**
- * A record to hold data for the Admin's "Existing Sections" table.
- */
+//This is the record that holds the return values necessary by the admin in the course table visible
 public record AdminSectionView(
         int SectionID,
         String CourseCode,

@@ -1,6 +1,5 @@
 package edu.univ.erp.data;
 
-// --- NEW IMPORTS ---
 import edu.univ.erp.domain.Course;
 import edu.univ.erp.domain.Instructor;
 import edu.univ.erp.util.DatabaseUtil;
@@ -177,6 +176,7 @@ public class AdminDAO {
 
 
     //This method is used to display the section on the admin SectionManagementPanel
+    //It returns all the sections as arraylist of record AdminSectionView
     public List<AdminSectionView> getAllSectionsForView() {
         List<AdminSectionView> sections = new ArrayList<>();
         String sql = """
@@ -186,6 +186,9 @@ public class AdminDAO {
             LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
             ORDER BY c.CourseCode, s.SectionNumber
             """;
+        //This query selects items from multiple tables in the database
+        //It selects the SectionID, SectionNumber, TimeSlot, EnrollmentCount and Capacity from the sections Table (s)
+        //It selects Course code from the course table and FullName of instructor form the instructor table
         try (Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(sql); ResultSet Result = Statement.executeQuery()) {
             while (Result.next()) {
                 sections.add(new AdminSectionView(
@@ -207,6 +210,7 @@ public class AdminDAO {
 
 
     //Removes a section from the database
+    //Passes the delete query to the section table
     public boolean DeleteSection(int SectionID){
         String SQL = "DELETE FROM Sections WHERE SectionID = ?";
         try(Connection StudentDBConnection = DatabaseUtil.GetStudentConnection(); PreparedStatement Statement = StudentDBConnection.prepareStatement(SQL)){

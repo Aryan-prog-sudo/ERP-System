@@ -5,7 +5,8 @@ public record Instructor(
         String fullName,
         String email
 ) {
-    // Override toString() to look nice in the JComboBox
+
+    //This is for the JComboBox
     @Override
     public String toString() {
         return fullName;

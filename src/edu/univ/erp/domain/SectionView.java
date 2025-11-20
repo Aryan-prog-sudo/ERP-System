@@ -1,9 +1,6 @@
 package edu.univ.erp.domain;
 
-/**
- * A record to hold data for the student's Course Catalog view.
- * This is a "ViewModel" that joins data from multiple tables.
- */
+//This used to hold the data for the sections table on the student side of application, the table on the course catalog
 public record SectionView(
         int sectionId,
         String courseCode,

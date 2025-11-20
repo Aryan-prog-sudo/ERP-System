@@ -12,10 +12,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/**
- * Admin home page dashboard.
- * FIXED: Replaced Date Spinner with JFormattedTextField (No arrows).
- */
+//Admin Home page
 public class AdminDashboardPanel extends JPanel {
 
     //Color themes
@@ -26,6 +23,7 @@ public class AdminDashboardPanel extends JPanel {
     private static final Color COLOR_TEXT_DARK = new Color(30, 30, 30);
     private static final Color COLOR_TEXT_LIGHT = new Color(140, 140, 140);
     private static final Color COLOR_BORDER = new Color(220, 220, 220);
+
     //These are used on the settings panels - Maintenance Mode, Deadline
     private static final Color COLOR_SETTINGS_BG = new Color(250, 250, 250);
     private static final Color COLOR_GREEN_ON = new Color(0, 150, 50);
@@ -57,16 +55,16 @@ public class AdminDashboardPanel extends JPanel {
         headerPanel.add(subtitleLabel);
         add(headerPanel, BorderLayout.NORTH);
 
-        // --- Center Panel (Settings + Cards) ---
+        //Center Panel (Settings + Cards)
         JPanel centerWrapper = new JPanel();
         centerWrapper.setBackground(COLOR_BACKGROUND);
         centerWrapper.setLayout(new BoxLayout(centerWrapper, BoxLayout.Y_AXIS));
 
-        // 1. Add Settings Panel (Maintenance + Deadline)
+        //Add Settings Panel (Maintenance + Deadline)
         centerWrapper.add(createSettingsPanel());
         centerWrapper.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        // 2. Add Navigation Cards
+        //Add Card for the CourseManagement, SectionManagement and UserManagement
         centerWrapper.add(createCardsPanel(onManageUsers, onManageCourses, onManageSections));
         add(centerWrapper, BorderLayout.CENTER);
     }
@@ -93,7 +91,7 @@ public class AdminDashboardPanel extends JPanel {
         maintText.add(maintTitle);
         maintText.add(maintDesc);
 
-        // Toggle Button
+        //Toggle Button for maintenance
         JToggleButton toggleButton = new JToggleButton("OFF");
         toggleButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         toggleButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -155,7 +153,7 @@ public class AdminDashboardPanel extends JPanel {
         dateText.add(dateTitle);
         dateText.add(dateDesc);
 
-        // --- UPDATED: Use JFormattedTextField instead of JSpinner ---
+        //Write into the table to change the deadline
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         JFormattedTextField dateField = new JFormattedTextField(dateFormat);
         dateField.setFont(new Font("SansSerif", Font.PLAIN, 14));
@@ -165,7 +163,7 @@ public class AdminDashboardPanel extends JPanel {
                 new EmptyBorder(5, 5, 5, 5)
         ));
 
-        // Load current deadline
+        //Load current deadline
         try {
             String currentDeadline = adminService.GetSystemDeadline();
             Date date = dateFormat.parse(currentDeadline);

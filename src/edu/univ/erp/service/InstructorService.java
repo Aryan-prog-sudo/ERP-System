@@ -11,9 +11,7 @@ import java.io.Writer;
 import java.util.List;
 import java.util.logging.Logger;
 
-/**
- * Handles all business logic for the Instructor role.
- */
+//This class is basically used by the UI to connect the Instructor logic on frontend to the backend
 public class InstructorService {
     private static final Logger logger = Logger.getLogger(InstructorService.class.getName());
     private InstructorDAO instructorDAO;
@@ -43,12 +41,10 @@ public class InstructorService {
         return instructorDAO.getGradebook(sectionId);
     }
 
-    /**
-     * Calculates the final grade and saves all scores.
-     * This includes the bonus logic for grade calculation.
-     */
+
     //This function basically calculates the final grade and saves all the grades into the database
     public boolean saveAndCalculateGrades(int sectionId, List<GradebookEntry> gradebook) {
+        //Check maintenance mode on every step
         if (settingsDAO.IsMaintenanceModeOn()) {
             logger.warning("Grade update failed: System is in Maintenance Mode.");
             return false;
@@ -93,19 +89,10 @@ public class InstructorService {
 
     //This method fetches all the gradebook data and writes it into the CSV
     public void exportGradebookToCsv(int sectionId, Writer writer) throws Exception {
-        // 1. Get the data (we already have a method for this)
+        //Get the data that is visible on the table
         List<GradebookEntry> gradebook = getGradebook(sectionId);
-
-        // 2. Use CSVWriter to write the data
-        try (CSVWriter csvWriter = new CSVWriter(writer)) {
-
-            // 3. Write the header row
-            csvWriter.writeNext(new String[]{
-                    "Student ID", "Student Name", "Quiz Score",
-                    "Midterm Score", "Final Score", "Final Grade"
-            });
-
-            // 4. Write all data rows
+        try (CSVWriter csvWriter = new CSVWriter(writer)) { //CSV Writer
+            csvWriter.writeNext(new String[]{"Student ID", "Student Name", "Quiz Score", "Midterm Score", "Final Score", "Final Grade"}); //Header row
             for (GradebookEntry entry : gradebook) {
                 csvWriter.writeNext(new String[]{
                         String.valueOf(entry.studentId()),
@@ -117,12 +104,12 @@ public class InstructorService {
                 });
             }
         }
-        // Let the exception bubble up to the UI to be handled
+        //Exceptions handled in the UI where the JFileSelector is used
     }
+
 
     //This would be added to the UI panel to prevent the user from even writing in the columns for grade
     public boolean SystemInMaintenance(){
         return settingsDAO.IsMaintenanceModeOn();
     }
-
 }
