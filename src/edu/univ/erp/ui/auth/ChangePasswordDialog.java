@@ -6,22 +6,17 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.Arrays;
 
-/**
- * Modal dialog for changing a user's password.
- * UPDATED: Now calls the AuthService to change the password.
- */
+
+//This handles the dialog (the UI not the backend) for changing the password
 public class ChangePasswordDialog extends JDialog {
 
     private JPasswordField oldPasswordField;
     private JPasswordField newPasswordField;
     private JPasswordField confirmPasswordField;
 
-    private AuthService authService; // <-- 1. ADD THIS FIELD
-    private String userEmail; // <-- 2. ADD THIS FIELD
+    private AuthService authService;
+    private String userEmail;
 
-    /**
-     * 3. UPDATED: Constructor now accepts AuthService and the user's email.
-     */
     public ChangePasswordDialog(JFrame parent, AuthService authService, String userEmail) {
         super(parent, "Change Password", true);
         this.authService = authService;
@@ -30,7 +25,6 @@ public class ChangePasswordDialog extends JDialog {
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setResizable(false);
 
-        // (Layout code is the same)
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(new EmptyBorder(25, 25, 25, 25));
         GridBagConstraints gbc = new GridBagConstraints();
@@ -84,7 +78,6 @@ public class ChangePasswordDialog extends JDialog {
         gbc.fill = GridBagConstraints.NONE;
         panel.add(buttonPanel, gbc);
 
-        // --- Action Listeners ---
         cancelButton.addActionListener(e -> dispose());
         submitButton.addActionListener(e -> onSubmit());
 
@@ -93,50 +86,46 @@ public class ChangePasswordDialog extends JDialog {
         setLocationRelativeTo(parent);
     }
 
-    /**
-     * 4. UPDATED: Called when the "Submit" button is clicked.
-     */
+    //This piece of code is run when the submit button is clicked
     private void onSubmit() {
         char[] oldPass = oldPasswordField.getPassword();
         char[] newPass = newPasswordField.getPassword();
         char[] confirmPass = confirmPasswordField.getPassword();
 
-        // 1. Check if new passwords match
+        //This checks that the new password field input and the confirm password field input match
         if (!Arrays.equals(newPass, confirmPass)) {
             JOptionPane.showMessageDialog(this, "The new passwords do not match.", "Password Mismatch", JOptionPane.ERROR_MESSAGE);
             clearPasswords(oldPass, newPass, confirmPass);
             return;
         }
 
-        // 2. Check if new password is empty
+        //The new password cannot be empty
         if (newPass.length == 0) {
             JOptionPane.showMessageDialog(this, "The new password cannot be empty.", "Invalid Password", JOptionPane.ERROR_MESSAGE);
             clearPasswords(oldPass, newPass, confirmPass);
             return;
         }
 
-        // 3. --- Call the Authentication Service ---
+        //Backend logic call
         boolean success = authService.ChangePassword(
                 this.userEmail,
                 new String(oldPass),
                 new String(newPass)
         );
 
-        // 4. Show result
         if (success) {
             JOptionPane.showMessageDialog(this, "Password updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             clearPasswords(oldPass, newPass, confirmPass);
             dispose(); // Close the dialog
-        } else {
+        }
+        else {
             JOptionPane.showMessageDialog(this, "The old password you entered is incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
             clearPasswords(oldPass, newPass, confirmPass);
         }
     }
 
-    /**
-     * Helper method to securely clear password arrays.
-     */
-    private void clearPasswords(char[]... passwordArrays) {
+    //Clear array, we cannot store the passwords
+     void clearPasswords(char[]... passwordArrays) {
         for (char[] password : passwordArrays) {
             Arrays.fill(password, '0');
         }

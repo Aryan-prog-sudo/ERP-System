@@ -11,13 +11,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List; // <-- NEW IMPORT
 
-/**
- * Admin panel for managing users.
- * UPDATED: Beautified and now loads data from the AdminService.
- */
+//This is the admin panel that helps in managing the users
 public class UserManagementPanel extends JPanel {
 
-    // --- Color Theme ---
+    //Color Theme
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
     private static final Color COLOR_BACKGROUND = Color.WHITE;
@@ -35,40 +32,27 @@ public class UserManagementPanel extends JPanel {
 
     public UserManagementPanel(Runnable onGoBack, AdminService adminService) {
         this.adminService = adminService;
-
         setLayout(new BorderLayout(0, 20));
         setBackground(COLOR_BACKGROUND);
         setBorder(new EmptyBorder(20, 40, 40, 40));
         add(createHeaderPanel(onGoBack), BorderLayout.NORTH);
-
         JPanel mainContentPanel = new JPanel(new GridBagLayout());
         mainContentPanel.setBackground(COLOR_BACKGROUND);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH; gbc.weighty = 1.0;
-
         gbc.gridx = 0; gbc.weightx = 0.4; gbc.insets = new Insets(0, 0, 0, 20);
         mainContentPanel.add(createFormPanel(), gbc);
-
         gbc.gridx = 1; gbc.weightx = 0.6; gbc.insets = new Insets(0, 20, 0, 0);
         mainContentPanel.add(createTablePanel(), gbc);
-
         add(mainContentPanel, BorderLayout.CENTER);
-
-        // --- NEW: Load data when the panel opens ---
         loadData();
     }
 
-    /**
-     * NEW: Fetches all users from the service and populates the table.
-     */
+    //This loads all the data regarding all the users
+    //Calls the GetAllUsers method of the service class
     private void loadData() {
-        // 1. Get data from the service
         List<UserView> users = adminService.GetAllUsers();
-
-        // 2. Clear the table
         tableModel.setRowCount(0);
-
-        // 3. Repopulate the table
         for (UserView user : users) {
             tableModel.addRow(new Object[]{
                     user.fullName(),
@@ -78,9 +62,7 @@ public class UserManagementPanel extends JPanel {
         }
     }
 
-    /**
-     * UPDATED: createHeaderPanel, now styled
-     */
+    //To create header panel
     private JPanel createHeaderPanel(Runnable onGoBack) {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BACKGROUND);
@@ -104,9 +86,7 @@ public class UserManagementPanel extends JPanel {
         return headerPanel;
     }
 
-    /**
-     * UPDATED: createFormPanel, now styled
-     */
+    //This creates the form panel, ie the form we fill on the left to add new user
     private JPanel createFormPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(COLOR_BACKGROUND);
@@ -157,9 +137,8 @@ public class UserManagementPanel extends JPanel {
         return panel;
     }
 
-    /**
-     * UPDATED: createTablePanel, now loads no data by default
-     */
+
+    //Create the table on the right of UserManagementPanel that shows all the users
     private JPanel createTablePanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 15));
         panel.setOpaque(false);
@@ -171,7 +150,6 @@ public class UserManagementPanel extends JPanel {
 
         String[] columnNames = {"Name", "UserName", "Role"};
 
-        // --- UPDATED: No more hardcoded data ---
         tableModel = new DefaultTableModel(null, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -191,35 +169,25 @@ public class UserManagementPanel extends JPanel {
         return panel;
     }
 
-    /**
-     * UPDATED: Logic for the "Add User" button.
-     * Now reloads the table from the database on success.
-     */
+
     private void onAddUser() {
         String name = nameField.getText();
         String email = emailField.getText();
         String role = (String) roleComboBox.getSelectedItem();
-
+        //All the fields are to be filled, and non can be empty
         if (name.isEmpty() || email.isEmpty() || "Select role".equals(role)) {
             JOptionPane.showMessageDialog(this,
                     "Please fill in all fields.", "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        String defaultPassword = "defaultPassword123";
-
-        // --- THIS IS THE REAL BACKEND CALL ---
-        boolean success = adminService.createNewUser(name, email, role, defaultPassword);
-
+        String defaultPassword = "defaultPassword123"; //This is the default password provided everytime the user is created
+        //Backend Call to the service call
+        boolean success = adminService.createNewUser(name, email, role, defaultPassword); //This returns true if the user is created
         if (success) {
-            // --- UPDATED: Refresh table from database ---
             loadData();
-
-            // Clear the form
             nameField.setText("");
             emailField.setText("");
             roleComboBox.setSelectedIndex(0);
-
             JOptionPane.showMessageDialog(this,
                     "User '" + name + "' added successfully!\nDefault Password: " + defaultPassword,
                     "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -230,7 +198,6 @@ public class UserManagementPanel extends JPanel {
         }
     }
 
-    // --- Helper Methods (Copied from other styled panels) ---
 
     private JButton createModernButton(String text, boolean isPrimary) {
         JButton button = new JButton(text);

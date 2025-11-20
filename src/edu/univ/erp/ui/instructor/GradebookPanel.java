@@ -15,13 +15,12 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Instructor Gradebook Panel.
- * UPDATED: Now locks the table and save button during Maintenance Mode.
- */
+
+//This handles the gradeBook panel for the instructor
+//Whenever we click on the sections, it opens the grade panel of that section
 public class GradebookPanel extends JPanel {
 
-    // --- Color Theme ---
+    //Color Themes
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
     private static final Color COLOR_BACKGROUND = Color.WHITE;
@@ -41,7 +40,6 @@ public class GradebookPanel extends JPanel {
 
     public GradebookPanel(Runnable onGoBack, InstructorService instructorService) {
         this.instructorService = instructorService;
-
         setLayout(new BorderLayout(0, 15));
         setBackground(COLOR_BACKGROUND);
         setBorder(new EmptyBorder(20, 40, 40, 40));
@@ -49,15 +47,12 @@ public class GradebookPanel extends JPanel {
         add(createTablePanel(), BorderLayout.CENTER);
     }
 
+
     public void loadGradebook(int sectionId) {
         this.currentSectionId = sectionId;
         List<GradebookEntry> entries = instructorService.getGradebook(sectionId);
-
         titleLabel.setText("Gradebook (Section " + sectionId + ")");
-
-        // --- NEW: Check Maintenance Mode on Load ---
-        boolean isMaintenance = instructorService.SystemInMaintenance();
-
+        boolean isMaintenance = instructorService.SystemInMaintenance(); //Check maintenance mode
         if (isMaintenance) {
             titleLabel.setText("Gradebook (Read-Only Mode)");
             titleLabel.setForeground(Color.RED);
@@ -70,7 +65,6 @@ public class GradebookPanel extends JPanel {
             calculateButton.setBackground(COLOR_PRIMARY);
             calculateButton.setToolTipText(null);
         }
-        // --------------------------------------------
 
         tableModel.setRowCount(0);
         double totalScore = 0;
@@ -183,7 +177,7 @@ public class GradebookPanel extends JPanel {
         return scrollPane;
     }
 
-    // ... (onSaveAndCalculate and onExportCsv are unchanged) ...
+    //The save and calculate logic
     private void onSaveAndCalculate() {
         if (currentSectionId == -1) return;
         if (gradesTable.isEditing()) {
@@ -207,11 +201,13 @@ public class GradebookPanel extends JPanel {
         if (success) {
             JOptionPane.showMessageDialog(this, "Grades saved and calculated successfully.");
             loadGradebook(currentSectionId);
-        } else {
+        }
+        else {
             JOptionPane.showMessageDialog(this, "Failed to save grades (System may be in Maintenance Mode).", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    //This opens the JFileChooser Class
     private void onExportCsv() {
         if (currentSectionId == -1) return;
         JFileChooser fileChooser = new JFileChooser();
@@ -221,7 +217,8 @@ public class GradebookPanel extends JPanel {
             try (FileWriter writer = new FileWriter(fileChooser.getSelectedFile())) {
                 instructorService.exportGradebookToCsv(currentSectionId, writer);
                 JOptionPane.showMessageDialog(this, "Gradebook exported successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Error exporting file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -232,6 +229,7 @@ public class GradebookPanel extends JPanel {
         return Double.parseDouble(obj.toString());
     }
 
+
     private JButton createModernButton(String text, boolean isPrimary, boolean isSmall) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, isSmall ? 12 : 14));
@@ -239,7 +237,8 @@ public class GradebookPanel extends JPanel {
         if (isSmall) {
             button.setPreferredSize(new Dimension(80, 28));
             button.setBorder(new EmptyBorder(4, 8, 4, 8));
-        } else {
+        }
+        else {
             button.setPreferredSize(new Dimension(button.getPreferredSize().width, 40));
             button.setBorder(new EmptyBorder(5, 15, 5, 15));
         }
@@ -248,7 +247,6 @@ public class GradebookPanel extends JPanel {
         final Color bg;
         final Color fg;
         final Color bgHover;
-
         if (isPrimary) {
             bg = COLOR_PRIMARY;
             fg = Color.WHITE;
@@ -258,13 +256,11 @@ public class GradebookPanel extends JPanel {
             fg = COLOR_TEXT_DARK;
             bgHover = new Color(240, 240, 240);
         }
-
         button.setBackground(bg);
         button.setForeground(fg);
         if (!isPrimary) {
             button.setBorder(new LineBorder(COLOR_BORDER, 1));
         }
-
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
                 if (button.isEnabled()) button.setBackground(bgHover);

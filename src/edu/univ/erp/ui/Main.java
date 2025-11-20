@@ -177,9 +177,8 @@ public class Main extends JFrame {
         this.setVisible(true);
     }
 
-    /**
-     * UPDATED: Creates the Menu Bar with the Notification Bell.
-     */
+
+    //This creates the menu bar on the top of all pages with "file" adn notification
     private void createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
@@ -239,6 +238,7 @@ public class Main extends JFrame {
     /**
      * NEW: Displays the notification popup menu.
      */
+    //Notification panel
     private void showNotifications(JButton source) {
         JPopupMenu popup = new JPopupMenu();
         popup.setPreferredSize(new Dimension(350, 250)); // Size of popup
@@ -249,14 +249,14 @@ public class Main extends JFrame {
             JMenuItem item = new JMenuItem("No new notifications");
             item.setEnabled(false);
             popup.add(item);
-        } else {
+        }
+        else {
             JLabel header = new JLabel("  Recent Updates");
             header.setFont(new Font("SansSerif", Font.BOLD, 12));
             header.setForeground(Color.GRAY);
             header.setBorder(new EmptyBorder(5, 0, 5, 0));
             popup.add(header);
             popup.addSeparator();
-
             for (String msg : msgs) {
                 // HTML for word wrapping
                 JMenuItem item = new JMenuItem("<html><body style='width: 280px'>" + msg + "</body></html>");

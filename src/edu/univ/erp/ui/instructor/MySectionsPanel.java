@@ -19,7 +19,7 @@ import java.util.function.Consumer;
  */
 public class MySectionsPanel extends JPanel {
 
-    // --- Color Theme ---
+    //Color themes
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
     private static final Color COLOR_BACKGROUND = Color.WHITE;
@@ -49,9 +49,7 @@ public class MySectionsPanel extends JPanel {
         loadData();
     }
 
-    /**
-     * New method to fetch data from the service (Functionality unchanged)
-     */
+
     private void loadData() {
         List<SectionView> sections = instructorService.getAssignedSections();
         cardsPanel.removeAll(); // Clear old cards
@@ -72,9 +70,7 @@ public class MySectionsPanel extends JPanel {
         cardsPanel.repaint();
     }
 
-    /**
-     * Header panel, now styled
-     */
+    //Header panel
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BACKGROUND);
@@ -157,11 +153,9 @@ public class MySectionsPanel extends JPanel {
         return card;
     }
 
-    // --- Helper Methods (Copied from previous examples) ---
 
-    /**
-     * Helper method to create a modern button with hover effects.
-     */
+
+    //Helper method to create a modern button with hover effects.
     private JButton createModernButton(String text, boolean isPrimary) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -191,9 +185,6 @@ public class MySectionsPanel extends JPanel {
         return button;
     }
 
-    /**
-     * Helper method to load an icon.
-     */
     private JLabel createIconLabel(String fileName, String fallbackText) {
         try {
             URL iconUrl = getClass().getResource("/icons/" + fileName);
@@ -202,10 +193,10 @@ public class MySectionsPanel extends JPanel {
                 Image img = icon.getImage().getScaledInstance(48, 48, Image.SCALE_SMOOTH);
                 return new JLabel(new ImageIcon(img));
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
-
         JLabel iconLabel = new JLabel(fallbackText);
         iconLabel.setFont(new Font("SansSerif", Font.BOLD, 48));
         iconLabel.setForeground(COLOR_PRIMARY);

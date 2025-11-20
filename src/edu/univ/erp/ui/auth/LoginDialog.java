@@ -12,9 +12,10 @@ import java.awt.event.MouseEvent;
 import java.net.URL;
 import java.util.Arrays;
 
+//This handles the logic for the login frontend
 public class LoginDialog extends JDialog {
 
-    // ... (Colors are the same) ...
+    //Color themes
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
     private static final Color COLOR_BACKGROUND = Color.WHITE;
@@ -32,7 +33,8 @@ public class LoginDialog extends JDialog {
     private Main mainApp;
     private AuthService authService;
 
-    // --- 1. NEW: The Simple Counter ---
+    //Counter to check the failed login attempts
+    //If it fails 5 times repeatedly then it blocks the login page
     private int failedAttempts = 0;
 
     public LoginDialog(Main parent, AuthService authService) {
@@ -40,10 +42,7 @@ public class LoginDialog extends JDialog {
         this.mainApp = parent;
         this.authService = authService;
 
-        // ... (Constructor UI setup code is EXACTLY the same as before) ...
-        // ... (Copy/Paste the UI setup from previous step or keep it as is) ...
-
-        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE); //On closing the window stop the code
         setResizable(false);
 
         JPanel panel = new JPanel(new GridBagLayout());
@@ -127,7 +126,7 @@ public class LoginDialog extends JDialog {
         setLocationRelativeTo(parent);
     }
 
-    // ... (Helper methods: createModernButton, createModernTextField, createIconLabel remain the same) ...
+
     private JButton createModernButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -180,47 +179,43 @@ public class LoginDialog extends JDialog {
         messageLabel.setForeground(COLOR_PRIMARY);
     }
 
-    /**
-     * UPDATED: Simple Frontend Counter Logic
-     */
+
+    //Logic to count the number of failed attempts
+    //Calls the login function of the backend which compares the username and the password to AuthDB
     private void onSignIn() {
-        // 2. Check the counter FIRST
+        //On 5 attempts stop the login access and give ERROR_MESSAGE
         if (failedAttempts >= 5) {
             JOptionPane.showMessageDialog(this,
                     "Access Locked: Too many failed attempts.\nPlease restart the application.",
                     "Login Blocked",
                     JOptionPane.ERROR_MESSAGE);
-            return; // Stop here, don't even check the database
+            return;
         }
 
-        String username = emailField.getText();
-        char[] password = passwordField.getPassword();
-
+        String username = emailField.getText(); //Input of the username field
+        char[] password = passwordField.getPassword(); //Input of the password field
         LoginResult result = authService.login(username, new String(password));
-
         if (result.isSuccess) {
             this.dispose();
             mainApp.onLoginSuccess(result.Role, username, result.userId);
-        } else {
-            // 3. Increment the counter on failure
+        }
+        else {//Increment failed attempts failure
             failedAttempts++;
             int remaining = 5 - failedAttempts;
-
             String errorMsg = result.Message;
             if (remaining > 0) {
                 errorMsg += "\nAttempts remaining: " + remaining;
-            } else {
+            }
+            else {
                 errorMsg += "\nAccount is now LOCKED.";
                 signInButton.setEnabled(false); // Disable button visually
                 signInButton.setBackground(Color.GRAY);
             }
-
             JOptionPane.showMessageDialog(this,
                     errorMsg,
                     "Login Failed",
                     JOptionPane.ERROR_MESSAGE);
         }
-
         Arrays.fill(password, '0');
     }
 }

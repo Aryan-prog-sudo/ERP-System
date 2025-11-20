@@ -21,9 +21,10 @@ import java.util.List;
  * Admin panel for managing sections.
  * UPDATED: Now includes "Remove" button with validation logic.
  */
+//This is the admin panel for managing the sections
 public class SectionManagementPanel extends JPanel {
 
-    // ... (Colors and fields remain the same) ...
+    //Color themes
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
     private static final Color COLOR_BACKGROUND = Color.WHITE;
@@ -39,42 +40,35 @@ public class SectionManagementPanel extends JPanel {
     private JTextField sectionNumField, timeField, capacityField;
     private AdminService adminService;
 
-    private List<AdminSectionView> currentSectionList; // <-- Store data for ID lookup
+    private List<AdminSectionView> currentSectionList; //This stores the data to look up the sections
 
     private final String COURSE_PROMPT = "--- Select a Course ---";
     private final String COURSE_EMPTY = "x---Empty (Create a Course First)---x";
     private final String INST_PROMPT = "--- Select an Instructor ---";
     private final String INST_EMPTY = "x---Empty (Create an Instructor First)---x";
 
+
     public SectionManagementPanel(Runnable onGoBack, AdminService adminService) {
         this.adminService = adminService;
-
         setLayout(new BorderLayout(0, 20));
         setBackground(COLOR_BACKGROUND);
         setBorder(new EmptyBorder(20, 40, 40, 40));
-
         add(createHeaderPanel(onGoBack), BorderLayout.NORTH);
-
         JPanel mainContentPanel = new JPanel(new GridBagLayout());
         mainContentPanel.setBackground(COLOR_BACKGROUND);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH; gbc.weighty = 1.0;
-
         gbc.gridx = 0; gbc.weightx = 0.4; gbc.insets = new Insets(0, 0, 0, 20);
         mainContentPanel.add(createFormPanel(), gbc);
-
         gbc.gridx = 1; gbc.weightx = 0.6; gbc.insets = new Insets(0, 20, 0, 0);
         mainContentPanel.add(createTablePanel(), gbc);
-
         add(mainContentPanel, BorderLayout.CENTER);
-
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
                 loadAllData();
             }
         });
-
         loadAllData();
     }
 
@@ -83,9 +77,7 @@ public class SectionManagementPanel extends JPanel {
         loadSectionsData();
     }
 
-    // ... (createHeaderPanel and createFormPanel remain exactly the same) ...
     private JPanel createHeaderPanel(Runnable onGoBack) {
-        // (Copy previous code: Header with Refresh button)
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BACKGROUND);
 
@@ -108,7 +100,6 @@ public class SectionManagementPanel extends JPanel {
     }
 
     private JPanel createFormPanel() {
-        // (Copy previous code: Form fields)
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(COLOR_BACKGROUND);
         panel.setBorder(BorderFactory.createCompoundBorder(
@@ -126,7 +117,7 @@ public class SectionManagementPanel extends JPanel {
         title.setForeground(COLOR_TEXT_DARK);
         panel.add(title, gbc);
 
-        // --- Course ComboBox ---
+        //The course buttons
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
         panel.add(new JLabel("Course"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
@@ -135,21 +126,21 @@ public class SectionManagementPanel extends JPanel {
         courseComboBox.setBackground(COLOR_BACKGROUND);
         panel.add(courseComboBox, gbc);
 
-        // --- Section Number ---
+        //The section number input
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
         panel.add(new JLabel("Section Number (e.g., 001)"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
         sectionNumField = createModernTextField(20);
         panel.add(sectionNumField, gbc);
 
-        // --- Time ---
+        //The part to take time schedule as input
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
         panel.add(new JLabel("Time (e.g., MWF 9:00 AM)"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
         timeField = createModernTextField(20);
         panel.add(timeField, gbc);
 
-        // --- Capacity ---
+        //The part to take
         gbc.gridy++; gbc.insets = new Insets(10, 0, 2, 0);
         panel.add(new JLabel("Capacity"), gbc);
         gbc.gridy++; gbc.insets = new Insets(0, 0, 10, 0);
@@ -177,9 +168,8 @@ public class SectionManagementPanel extends JPanel {
         return panel;
     }
 
-    /**
-     * UPDATED: Table now includes "Actions" column.
-     */
+    //This creates the table on the right of the sections
+    //It now also contains the option to delete sections
     private JPanel createTablePanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 15));
         panel.setOpaque(false);
@@ -189,12 +179,14 @@ public class SectionManagementPanel extends JPanel {
         title.setForeground(COLOR_TEXT_DARK);
         panel.add(title, BorderLayout.NORTH);
 
-        // --- NEW COLUMN: Actions ---
+        //The actions table basically adds the option to remove the sections
         String[] columnNames = {"Course", "Section", "Time", "Capacity", "Instructor", "Actions"};
 
         tableModel = new DefaultTableModel(null, columnNames) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
 
         sectionsTable = new JTable(tableModel);
@@ -202,7 +194,7 @@ public class SectionManagementPanel extends JPanel {
         sectionsTable.setRowHeight(35);
         sectionsTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
 
-        // Add Button Renderer
+        //Add Button Renderer
         sectionsTable.getColumnModel().getColumn(5).setCellRenderer(new ButtonRenderer());
         sectionsTable.addMouseListener(new TableButtonListener(sectionsTable));
 
@@ -213,8 +205,9 @@ public class SectionManagementPanel extends JPanel {
         return panel;
     }
 
+
+    //This code handles the logic for dropdowns
     private void loadDropdownData() {
-        // (Copy previous code: logic for populating dropdowns)
         java.util.List<Course> courses = adminService.getAllCourses();
         courseComboBox.removeAllItems();
         if (courses.isEmpty()) courseComboBox.addItem(COURSE_EMPTY);
@@ -222,7 +215,6 @@ public class SectionManagementPanel extends JPanel {
             courseComboBox.addItem(COURSE_PROMPT);
             for (Course c : courses) courseComboBox.addItem(c);
         }
-
         java.util.List<Instructor> instructors = adminService.getAllInstructors();
         instructorComboBox.removeAllItems();
         if (instructors.isEmpty()) instructorComboBox.addItem(INST_EMPTY);
@@ -232,9 +224,8 @@ public class SectionManagementPanel extends JPanel {
         }
     }
 
-    /**
-     * UPDATED: Stores list for ID lookup.
-     */
+
+    //This calls the method in admin service class to get info about all the sections
     private void loadSectionsData() {
         this.currentSectionList = adminService.GetAllSectionsForView(); // Store ref
         tableModel.setRowCount(0);
@@ -244,15 +235,16 @@ public class SectionManagementPanel extends JPanel {
                     s.CourseCode(),
                     s.SectionNumber(),
                     s.TimeSlot(),
-                    s.EnrolledCount() + " / " + s.Capacity(), // Show formatted string
+                    s.EnrolledCount() + " / " + s.Capacity(), //Total enrolled out of the total capacity
                     s.InstructorName(),
-                    "Remove" // Button text
+                    "Remove"
+                    // Button text
             });
         }
     }
 
+    //This is used to create sections
     private void onCreateSection() {
-        // (Copy previous code: Validation and Create call)
         Object courseObj = courseComboBox.getSelectedItem();
         Object instObj = instructorComboBox.getSelectedItem();
         String section = sectionNumField.getText();
@@ -286,7 +278,7 @@ public class SectionManagementPanel extends JPanel {
         }
     }
 
-    // --- RENDERER AND LISTENER FOR BUTTON ---
+
 
     class ButtonRenderer extends DefaultTableCellRenderer {
         JButton renderButton;
@@ -301,6 +293,7 @@ public class SectionManagementPanel extends JPanel {
             return renderButton;
         }
     }
+
 
     class TableButtonListener extends MouseAdapter {
         private final JTable table;

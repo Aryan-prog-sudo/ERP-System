@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class CourseCatalogPanel extends JPanel {
 
-    // --- Color Theme ---
+    //Color Theme
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
     private static final Color COLOR_BACKGROUND = Color.WHITE;
@@ -47,11 +47,11 @@ public class CourseCatalogPanel extends JPanel {
         add(createHeaderPanel(onGoBack), BorderLayout.NORTH);
         add(createTablePanel(), BorderLayout.CENTER);
 
-        // Load initial data
+        //Load initial data
         loadData();
         updateDeadlineLabel();
 
-        // --- NEW: Add Listener to Refresh on Page Load ---
+        //This refreshes this page as we open it
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
@@ -62,13 +62,10 @@ public class CourseCatalogPanel extends JPanel {
         });
     }
 
-    /**
-     * UPDATED: Now adds 'section.credits()' to the table row.
-     */
+
     private void loadData() {
         this.sectionList = studentService.getCourseCatalog();
         tableModel.setRowCount(0);
-
         for (SectionView section : sectionList) {
             tableModel.addRow(new Object[]{
                     section.courseCode(),
@@ -81,6 +78,7 @@ public class CourseCatalogPanel extends JPanel {
             });
         }
     }
+
 
     private JPanel createHeaderPanel(Runnable onGoBack) {
         JPanel headerPanel = new JPanel(new BorderLayout());

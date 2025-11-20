@@ -78,9 +78,6 @@ public class CourseManagementPanel extends JPanel {
         }
     }
 
-    /**
-     * UPDATED: createHeaderPanel, now styled
-     */
     private JPanel createHeaderPanel(Runnable onGoBack) {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BACKGROUND);
@@ -104,9 +101,6 @@ public class CourseManagementPanel extends JPanel {
         return headerPanel;
     }
 
-    /**
-     * UPDATED: createFormPanel, now styled
-     */
     private JPanel createFormPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(COLOR_BACKGROUND);
@@ -155,9 +149,6 @@ public class CourseManagementPanel extends JPanel {
         return panel;
     }
 
-    /**
-     * UPDATED: createTablePanel, now loads no data by default
-     */
     //This method created table on the right of the section where we create the codes
     private JPanel createTablePanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 15));
@@ -187,9 +178,7 @@ public class CourseManagementPanel extends JPanel {
         return panel;
     }
 
-    /**
-     * 4. UPDATED: Logic for the "Create Course" button.
-     */
+
     private void onCreateCourse() {
         String code = codeField.getText();
         String title = titleField.getText();
@@ -220,8 +209,8 @@ public class CourseManagementPanel extends JPanel {
         }
     }
 
-    // --- Helper Methods (Copied from other styled panels) ---
 
+    //Helper Methods (Copied from other styled panels)
     private JButton createModernButton(String text, boolean isPrimary) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, 14));
