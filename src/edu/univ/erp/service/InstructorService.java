@@ -78,11 +78,14 @@ public class InstructorService {
 
     //Used to convert grades to LetterGrade
     private String CalculateLetterGrade(double Score) {
-        if (Score >= 90) return "A";
-        if (Score >= 80) return "B";
-        if (Score >= 70) return "C";
-        if (Score >= 60) return "D";
-        if (Score < 0) return "-";
+        if(Score<0) return "-"; //Invalid Grade
+        if(Score>= 90) return "A";
+        if(Score>=80) return "A-";
+        if(Score>=70) return "B";
+        if(Score>=60) return "B-";
+        if(Score>=50) return "C";
+        if(Score>=40) return "C-";
+        if(Score>=30) return "D";
         return "F";
     }
 

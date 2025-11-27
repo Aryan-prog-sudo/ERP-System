@@ -215,9 +215,6 @@ public class CourseCatalogPanel extends JPanel {
         }
     }
 
-    /**
-     * Mouse listener
-     */
     private class JTableButtonMouseListener extends MouseAdapter {
         private final JTable table;
         public JTableButtonMouseListener(JTable table) { this.table = table; }
@@ -247,8 +244,8 @@ public class CourseCatalogPanel extends JPanel {
         }
     }
 
-    // --- Helper Method for Styling ---
 
+    //Styling methods
     private JButton createModernButton(String text, boolean isPrimary, boolean isSmall) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, isSmall ? 12 : 14));

@@ -93,9 +93,7 @@ public class GradesPanel extends JPanel {
         return headerPanel;
     }
 
-    /**
-     * UPDATED: createTablePanel, now styled
-     */
+    //Creates the tables
     private JScrollPane createTablePanel() {
         String[] columnNames = {"Course Code", "Title", "Credits", "Grade"};
         tableModel = new DefaultTableModel(null, columnNames) {

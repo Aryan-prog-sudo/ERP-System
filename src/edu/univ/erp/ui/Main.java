@@ -208,7 +208,7 @@ public class Main extends JFrame {
         fileMenu.add(exitItem);
         menuBar.add(fileMenu);
 
-        // --- Middle: Spacer ---
+        //Space in the middle
         menuBar.add(Box.createHorizontalGlue());
 
         // Welcome Label (Center/Rightish)
@@ -219,7 +219,7 @@ public class Main extends JFrame {
         // Spacer before notifications
         menuBar.add(Box.createRigidArea(new Dimension(20, 0)));
 
-        // --- Right Side: Notifications Button ---
+        //Right Side: Notifications Button
         JButton notifButton = new JButton("🔔 Notifications");
         notifButton.setBorderPainted(false);
         notifButton.setContentAreaFilled(false);
@@ -235,9 +235,6 @@ public class Main extends JFrame {
         setJMenuBar(menuBar);
     }
 
-    /**
-     * NEW: Displays the notification popup menu.
-     */
     //Notification panel
     private void showNotifications(JButton source) {
         JPopupMenu popup = new JPopupMenu();
