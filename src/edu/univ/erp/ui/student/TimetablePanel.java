@@ -14,6 +14,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
+//This is the timetable panel in the Dashboard
 public class TimetablePanel extends JPanel {
 
     //Color Theme
@@ -58,7 +59,6 @@ public class TimetablePanel extends JPanel {
                     sec.credits(),
                     sec.instructorName(),
                     sec.timeSlot()
-                    //Location
             });
         }
     }
@@ -85,6 +85,7 @@ public class TimetablePanel extends JPanel {
         return headerPanel;
     }
 
+    //This creates table for the timetables
     private JScrollPane createTablePanel() {
         String[] columnNames = {"Course Code", "Title", "Credits", "Instructor", "Time"};
 

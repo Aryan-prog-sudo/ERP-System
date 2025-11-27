@@ -1,6 +1,6 @@
 package edu.univ.erp.ui.auth;
 
-import edu.univ.erp.service.AuthService; // <-- IMPORT THE SERVICE
+import edu.univ.erp.service.AuthService;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -91,21 +91,18 @@ public class ChangePasswordDialog extends JDialog {
         char[] oldPass = oldPasswordField.getPassword();
         char[] newPass = newPasswordField.getPassword();
         char[] confirmPass = confirmPasswordField.getPassword();
-
         //This checks that the new password field input and the confirm password field input match
         if (!Arrays.equals(newPass, confirmPass)) {
             JOptionPane.showMessageDialog(this, "The new passwords do not match.", "Password Mismatch", JOptionPane.ERROR_MESSAGE);
             clearPasswords(oldPass, newPass, confirmPass);
             return;
         }
-
         //The new password cannot be empty
         if (newPass.length == 0) {
             JOptionPane.showMessageDialog(this, "The new password cannot be empty.", "Invalid Password", JOptionPane.ERROR_MESSAGE);
             clearPasswords(oldPass, newPass, confirmPass);
             return;
         }
-
         //Backend logic call
         boolean success = authService.ChangePassword(
                 this.userEmail,
@@ -116,7 +113,7 @@ public class ChangePasswordDialog extends JDialog {
         if (success) {
             JOptionPane.showMessageDialog(this, "Password updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             clearPasswords(oldPass, newPass, confirmPass);
-            dispose(); // Close the dialog
+            dispose(); // Close the dialog on success
         }
         else {
             JOptionPane.showMessageDialog(this, "The old password you entered is incorrect.", "Error", JOptionPane.ERROR_MESSAGE);

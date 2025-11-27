@@ -13,10 +13,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * Instructor dashboard panel ("My Courses" / "My Sections").
- * UPDATED: Beautified with a modern look and feel.
- */
+//This is basically the dashboard panel for the instructor and it displays only the sections that the instructor is assigned to
 public class MySectionsPanel extends JPanel {
 
     //Color themes
@@ -44,16 +41,17 @@ public class MySectionsPanel extends JPanel {
         cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
         cardsPanel.setBackground(COLOR_BACKGROUND);
         add(cardsPanel, BorderLayout.CENTER);
-
         // Load data immediately
         loadData();
     }
 
 
+    //This method loads the data about the sections that this instructor is assigned to
+    //It then clears the old card(All the cards just in case some section was deleted)
+    //It then creates a new card for each of the section
     private void loadData() {
         List<SectionView> sections = instructorService.getAssignedSections();
         cardsPanel.removeAll(); // Clear old cards
-
         for (SectionView section : sections) {
             // Create a card for each section
             JPanel card = createCourseCard(
@@ -101,9 +99,7 @@ public class MySectionsPanel extends JPanel {
         return headerPanel;
     }
 
-    /**
-     * Course card, now styled
-     */
+    //Stylises course card creation
     private JPanel createCourseCard(JLabel iconLabel, String title, String time, String enrollment, int sectionId) {
         JPanel card = new JPanel(new BorderLayout(10, 10));
         card.setBackground(COLOR_BACKGROUND);

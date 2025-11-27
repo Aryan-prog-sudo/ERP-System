@@ -1,6 +1,6 @@
 package edu.univ.erp.ui.admin;
 
-import edu.univ.erp.domain.Course; // <-- NEW IMPORT
+import edu.univ.erp.domain.Course;
 import edu.univ.erp.service.AdminService;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,10 +10,10 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
-import java.util.List; // <-- NEW IMPORT
+import java.util.List;
 
 
-//This admin panel manages the Course
+//This admin panel manages the Course management
 public class CourseManagementPanel extends JPanel {
 
     //Color Themes
@@ -54,21 +54,18 @@ public class CourseManagementPanel extends JPanel {
 
         add(mainContentPanel, BorderLayout.CENTER);
 
-        // --- NEW: Load data when the panel opens ---
+        //Load the data as the panel opens
         loadData();
     }
 
-    /**
-     * NEW: Fetches all courses from the service and populates the table.
-     */
+
+    //This function fetches all the courses using the getAllCourses method in service
+    //Then it enters those values in the JTable
     private void loadData() {
-        // 1. Get data from the service
         List<Course> courses = adminService.getAllCourses();
 
-        // 2. Clear the table
         tableModel.setRowCount(0);
 
-        // 3. Repopulate the table
         for (Course course : courses) {
             tableModel.addRow(new Object[]{
                     course.courseCode(),
@@ -78,6 +75,8 @@ public class CourseManagementPanel extends JPanel {
         }
     }
 
+    //This creates the header panel on the course management panel
+    //It contains the Go back panel
     private JPanel createHeaderPanel(Runnable onGoBack) {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BACKGROUND);
@@ -93,7 +92,7 @@ public class CourseManagementPanel extends JPanel {
         headerPanel.add(goBackButton, BorderLayout.WEST);
         headerPanel.add(titleLabel, BorderLayout.CENTER);
 
-        // Add an invisible spacer to balance the "Go Back" button
+        //Add an invisible spacer to balance the "Go Back" button
         JButton spacer = createModernButton("← Go Back", false);
         spacer.setVisible(false);
         headerPanel.add(spacer, BorderLayout.EAST);
@@ -101,6 +100,7 @@ public class CourseManagementPanel extends JPanel {
         return headerPanel;
     }
 
+    //This method creates the panel that helps in creating the place to add new course
     private JPanel createFormPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(COLOR_BACKGROUND);
@@ -143,7 +143,7 @@ public class CourseManagementPanel extends JPanel {
         createButton.addActionListener(e -> onCreateCourse());
         panel.add(createButton, gbc);
 
-        gbc.gridy++; gbc.weighty = 1.0; // Pushes everything up
+        gbc.gridy++; gbc.weighty = 1.0; //Pushes everything up
         panel.add(Box.createGlue(), gbc);
 
         return panel;
@@ -179,16 +179,16 @@ public class CourseManagementPanel extends JPanel {
     }
 
 
+    //This method contains the action to be done on creating the courses
     private void onCreateCourse() {
         String code = codeField.getText();
         String title = titleField.getText();
         String creditsStr = creditsField.getText();
-
         if (code.isEmpty() || title.isEmpty() || creditsStr.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
+        //Confirmation panel
         int Confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to create this course: "+ code +"with the title:" + title, "Confirm course creation", JOptionPane.YES_NO_OPTION);
         if(Confirm!= JOptionPane.YES_OPTION){
             return;
@@ -198,17 +198,15 @@ public class CourseManagementPanel extends JPanel {
 
         if (success) {
             loadData();
-
-            // Clear the form
+            // Clear the form after adding new course
             codeField.setText("");
             titleField.setText("");
             creditsField.setText("");
-
+            //Success panel
             JOptionPane.showMessageDialog(this, "Course '" + code + "' added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this,
-                    "Failed to create course.\nInvalid credits or course code already exists.",
-                    "Input Error", JOptionPane.ERROR_MESSAGE);
+        }
+        else {
+            JOptionPane.showMessageDialog(this, "Failed to create course.\nInvalid credits or course code already exists.", "Input Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

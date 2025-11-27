@@ -1,6 +1,6 @@
 package edu.univ.erp.ui.admin;
 
-import edu.univ.erp.domain.UserView; // <-- NEW IMPORT
+import edu.univ.erp.domain.UserView;
 import edu.univ.erp.service.AdminService;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -9,7 +9,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.List; // <-- NEW IMPORT
+import java.util.List;
 
 //This is the admin panel that helps in managing the users
 public class UserManagementPanel extends JPanel {
@@ -78,7 +78,7 @@ public class UserManagementPanel extends JPanel {
         headerPanel.add(goBackButton, BorderLayout.WEST);
         headerPanel.add(titleLabel, BorderLayout.CENTER);
 
-        // Invisible spacer to center the title
+        //Invisible spacer to center the title
         JButton spacer = createModernButton("← Go Back", false);
         spacer.setVisible(false);
         headerPanel.add(spacer, BorderLayout.EAST);
@@ -191,17 +191,14 @@ public class UserManagementPanel extends JPanel {
             nameField.setText("");
             emailField.setText("");
             roleComboBox.setSelectedIndex(0);
-            JOptionPane.showMessageDialog(this,
-                    "User '" + name + "' added successfully!\nDefault Password: " + defaultPassword,
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "User '" + name + "' added successfully!\nDefault Password: " + defaultPassword, "Success", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this,
-                    "Failed to create user. The UserName may already be in use.",
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to create user. The UserName may already be in use.", "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
 
+    //Helper methods to create buttons
     private JButton createModernButton(String text, boolean isPrimary) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, 14));

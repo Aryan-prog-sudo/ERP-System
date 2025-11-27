@@ -15,7 +15,7 @@ import edu.univ.erp.service.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.List; // For notifications
+import java.util.List;
 import java.util.function.Consumer;
 
 public class Main extends JFrame {

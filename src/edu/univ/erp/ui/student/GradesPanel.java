@@ -15,7 +15,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.List;
 
-
+//This class displays all the grades for a particular student
 public class GradesPanel extends JPanel {
     //Color Theme
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
@@ -45,7 +45,6 @@ public class GradesPanel extends JPanel {
 
 
     private void loadData() {
-        // This will now work correctly thanks to the DAO fix
         List<Grade> grades = studentService.getGrades();
         tableModel.setRowCount(0); // Clear table
         for (Grade grade : grades) {

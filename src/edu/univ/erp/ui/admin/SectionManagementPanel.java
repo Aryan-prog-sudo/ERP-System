@@ -17,10 +17,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-/**
- * Admin panel for managing sections.
- * UPDATED: Now includes "Remove" button with validation logic.
- */
 //This is the admin panel for managing the sections
 public class SectionManagementPanel extends JPanel {
 
@@ -42,6 +38,7 @@ public class SectionManagementPanel extends JPanel {
 
     private List<AdminSectionView> currentSectionList; //This stores the data to look up the sections
 
+    //The prompts in the dropdowns
     private final String COURSE_PROMPT = "--- Select a Course ---";
     private final String COURSE_EMPTY = "x---Empty (Create a Course First)---x";
     private final String INST_PROMPT = "--- Select an Instructor ---";
@@ -99,6 +96,8 @@ public class SectionManagementPanel extends JPanel {
         return headerPanel;
     }
 
+
+    //This is teh panel that is used to fill informations about creating the new section
     private JPanel createFormPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(COLOR_BACKGROUND);
@@ -156,7 +155,7 @@ public class SectionManagementPanel extends JPanel {
         instructorComboBox.setBackground(COLOR_BACKGROUND);
         panel.add(instructorComboBox, gbc);
 
-        // --- Create Button ---
+        //Create Button
         gbc.gridy++; gbc.insets = new Insets(10, 0, 0, 0);
         JButton createButton = createModernButton("Create Section", true);
         createButton.addActionListener(e -> onCreateSection());
@@ -179,7 +178,7 @@ public class SectionManagementPanel extends JPanel {
         title.setForeground(COLOR_TEXT_DARK);
         panel.add(title, BorderLayout.NORTH);
 
-        //The actions table basically adds the option to remove the sections
+        //The actions table column basically adds the option to remove the sections
         String[] columnNames = {"Course", "Section", "Time", "Capacity", "Instructor", "Actions"};
 
         tableModel = new DefaultTableModel(null, columnNames) {
@@ -237,8 +236,7 @@ public class SectionManagementPanel extends JPanel {
                     s.TimeSlot(),
                     s.EnrolledCount() + " / " + s.Capacity(), //Total enrolled out of the total capacity
                     s.InstructorName(),
-                    "Remove"
-                    // Button text
+                    "Remove" //Text for the remove button
             });
         }
     }
@@ -264,6 +262,7 @@ public class SectionManagementPanel extends JPanel {
             return;
         }
 
+        //Confirmation panel
         int Confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to create this course: "+ section +"with the course:" +course.courseCode() , "Confirm course creation", JOptionPane.YES_NO_OPTION);
         if(Confirm!= JOptionPane.YES_OPTION){
             return;
@@ -313,7 +312,7 @@ public class SectionManagementPanel extends JPanel {
                 // Retrieve the ID using the row index
                 AdminSectionView section = currentSectionList.get(row);
 
-                // Confirm deletion
+                //Confirm deletion panel
                 int confirm = JOptionPane.showConfirmDialog(table,
                         "Are you sure you want to remove section " + section.SectionNumber() + " of " + section.CourseCode() + "?",
                         "Confirm Removal", JOptionPane.YES_NO_OPTION);
@@ -334,8 +333,8 @@ public class SectionManagementPanel extends JPanel {
         }
     }
 
-    // --- Helper Methods ---
 
+    //Helper methods to create buttons
     private JButton createModernButton(String text, boolean isPrimary) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, 14));

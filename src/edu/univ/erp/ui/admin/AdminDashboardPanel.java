@@ -12,7 +12,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-//Admin Home page
+//Admin Home page basically the dashboard
 public class AdminDashboardPanel extends JPanel {
 
     //Color themes
@@ -154,6 +154,7 @@ public class AdminDashboardPanel extends JPanel {
         dateText.add(dateDesc);
 
         //Write into the table to change the deadline
+        //Format of deadline is (yyyy-MM-dd)
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         JFormattedTextField dateField = new JFormattedTextField(dateFormat);
         dateField.setFont(new Font("SansSerif", Font.PLAIN, 14));

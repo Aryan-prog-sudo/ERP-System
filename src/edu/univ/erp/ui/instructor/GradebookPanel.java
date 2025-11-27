@@ -48,6 +48,7 @@ public class GradebookPanel extends JPanel {
     }
 
 
+    //Loads all the students into the grade book
     public void loadGradebook(int sectionId) {
         this.currentSectionId = sectionId;
         List<GradebookEntry> entries = instructorService.getGradebook(sectionId);
@@ -92,10 +93,9 @@ public class GradebookPanel extends JPanel {
         }
     }
 
+    //Column Names
     private String[] getColumnNames() {
-        return new String[]{
-                "Student ID", "Student Name", "Quiz (20%)",
-                "Midterm (30%)", "Final (50%)", "Final Grade"
+        return new String[]{"Student ID", "Student Name", "Quiz (20%)", "Midterm (30%)", "Final (50%)", "Final Grade"
         };
     }
 
@@ -124,7 +124,7 @@ public class GradebookPanel extends JPanel {
         JButton exportButton = createModernButton("Export CSV", false, false);
         exportButton.addActionListener(e -> onExportCsv());
 
-        // Store reference to disable it later
+        //Store reference to disable it later
         calculateButton = createModernButton("Save & Calculate Grades", true, false);
         calculateButton.addActionListener(e -> onSaveAndCalculate());
 
@@ -142,7 +142,6 @@ public class GradebookPanel extends JPanel {
         tableModel = new DefaultTableModel(null, getColumnNames()) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                // --- THE CRITICAL FIX ---
                 // If system is in maintenance, NO cells are editable.
                 if (instructorService.SystemInMaintenance()) {
                     return false;

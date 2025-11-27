@@ -1,14 +1,12 @@
 package edu.univ.erp.auth;
-//Change
 import edu.univ.erp.util.DatabaseUtil;
 import org.mindrot.jbcrypt.BCrypt;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList; // <-- NEW IMPORT
-import java.util.List; // <-- NEW IMPORT
-
+import java.util.ArrayList;
+import java.util.List;
 
 //This class handles the SQL connections for the AuthDB
 public class UserDAO {

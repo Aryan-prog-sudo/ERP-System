@@ -8,7 +8,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
 
-
+//Dashboard panel for the students
 public class StudentDashboardPanel extends JPanel {
 
     //Color Theme
@@ -45,7 +45,7 @@ public class StudentDashboardPanel extends JPanel {
 
         add(headerPanel, BorderLayout.NORTH);
 
-        // --- Cards Panel ---
+        //Cards Panel
         JPanel cardsPanel = new JPanel(new GridBagLayout());
         cardsPanel.setBackground(COLOR_BACKGROUND);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -60,7 +60,7 @@ public class StudentDashboardPanel extends JPanel {
                 registerButton
         );
 
-        //Card 2: View My Timetable
+        //View Timetable card
         JButton scheduleButton = createModernButton("View Schedule", false);
         scheduleButton.addActionListener(e -> onGoToTimetable.run());
         JPanel card2 = createDashboardCard(
@@ -70,7 +70,7 @@ public class StudentDashboardPanel extends JPanel {
                 scheduleButton
         );
 
-        //Card 3: Check My Grades
+        //View grades card
         JButton gradesButton = createModernButton("View Grades", false);
         gradesButton.addActionListener(e -> onGoToGrades.run());
         JPanel card3 = createDashboardCard(
@@ -100,10 +100,6 @@ public class StudentDashboardPanel extends JPanel {
         add(cardsPanel, BorderLayout.CENTER);
     }
 
-    /**
-     * Helper method to create one of the dashboard cards.
-     * (Functionality is the same, just styled)
-     */
     private JPanel createDashboardCard(JLabel icon, String title, String description, JButton button) {
         JPanel card = new JPanel(new BorderLayout(10, 10));
         card.setBackground(COLOR_BACKGROUND);
@@ -112,7 +108,7 @@ public class StudentDashboardPanel extends JPanel {
                 new EmptyBorder(25, 25, 25, 25)
         ));
 
-        // --- Top content (Icon, Title, Desc) ---
+        //Top content (Icon, Title, Desc)
         JPanel topPanel = new JPanel();
         topPanel.setOpaque(false); // Transparent background
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
@@ -133,7 +129,7 @@ public class StudentDashboardPanel extends JPanel {
 
         card.add(topPanel, BorderLayout.NORTH);
 
-        // Button
+        //Button
         button.setPreferredSize(new Dimension(button.getPreferredSize().width, 40));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -148,11 +144,6 @@ public class StudentDashboardPanel extends JPanel {
         return card;
     }
 
-    /**
-     * Helper method to create a modern button with hover effects.
-     * @param text The button's text
-     * @param isPrimary Whether to use the primary (blue) style
-     */
     private JButton createModernButton(String text, boolean isPrimary) {
         JButton button = new JButton(text);
         button.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -183,11 +174,6 @@ public class StudentDashboardPanel extends JPanel {
         return button;
     }
 
-    /**
-     * Helper method to load an icon.
-     * @param fileName The name of the file in /icons/
-     * @param fallbackText The emoji/text to use if the icon fails to load
-     */
     private JLabel createIconLabel(String fileName, String fallbackText) {
         try {
             // Try to load the image from src/main/resources/icons/

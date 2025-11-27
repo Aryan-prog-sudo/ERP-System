@@ -5,16 +5,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
-/**
- * A standalone program to completely reset and seed the database.
- *
- * This program will:
- * 1. WIPE ALL DATA from all tables.
- * 2. Create ONLY the 4 new test users (admin1, inst1, stu1, stu2).
- * 3. Create their corresponding profiles in the StudentDB.
- *
- * Run this file ONCE to reset your database for final testing.
- */
+//This seeds the database with sample users
+//Truncates all the tables if they are not empty
+//Then inserts into the database four users
 public class DatabaseSeeder {
 
     public static void main(String[] args) {
@@ -24,25 +17,25 @@ public class DatabaseSeeder {
         Connection studentConn = null;
 
         try {
-            // 1. Get connections
+            // Ge connections
             authConn = DatabaseUtil.GetAuthConnection();
             studentConn = DatabaseUtil.GetStudentConnection();
             System.out.println("Connections established...");
 
-            // 2. Set transaction mode
+            //Set transaction mode
             authConn.setAutoCommit(false);
             studentConn.setAutoCommit(false);
             System.out.println("Transaction mode set.");
 
-            // 3. WIPE ALL EXISTING DATA
+            //Wipe all data
             wipeAllTables(authConn, studentConn);
             System.out.println("All tables wiped.");
 
-            // 4. Re-seed default settings
+            //Re-seed default settings
             seedSystemSettings(studentConn);
             System.out.println("System settings seeded.");
 
-            // 5. Create ONLY your 4 test users
+            //Create ONLY your 4 test users
             createUser(authConn, studentConn, "Stu One", "stu1@university.edu", "stu123", "Student");
             createUser(authConn, studentConn, "Stu Two", "stu2@university.edu", "stu123", "Student");
             createUser(authConn, studentConn, "Inst One", "inst1@university.edu", "inst123", "Instructor");
@@ -50,19 +43,19 @@ public class DatabaseSeeder {
 
             System.out.println("Your 4 test users have been created.");
 
-            // 6. Commit the changes
+            //Commit the changes
             authConn.commit();
             studentConn.commit();
 
             System.out.println("-----------------------------------");
-            System.out.println("✅ SUCCESS: Database has been reset with your 4 users.");
+            System.out.println("SUCCESS: Database has been reset with your 4 users.");
             System.out.println("You can now run Main.java.");
             System.out.println("-----------------------------------");
 
         } catch (Exception e) {
             // 7. Rollback on error
             System.out.println("-----------------------------------");
-            System.out.println("❌ ERROR: Seeding failed. Rolling back all changes.");
+            System.out.println("ERROR: Seeding failed. Rolling back all changes.");
             System.out.println("Please check your DatabaseUtil.java passwords.");
             System.out.println("-----------------------------------");
             e.printStackTrace();
@@ -74,7 +67,7 @@ public class DatabaseSeeder {
                 re.printStackTrace();
             }
         } finally {
-            // 8. Close connections
+            //Close connections
             try {
                 if (authConn != null) authConn.close();
                 if (studentConn != null) studentConn.close();
@@ -101,9 +94,7 @@ public class DatabaseSeeder {
         }
     }
 
-    /**
-     * Re-inserts the default maintenance mode setting.
-     */
+    //Set the default maintenance as false
     private static void seedSystemSettings(Connection studentConn) throws Exception {
         String sql = "INSERT INTO SystemSettings (SettingKey, SettingValue) VALUES ('MaintenanceMode','false');";
         try (PreparedStatement stmt = studentConn.prepareStatement(sql)) {
@@ -111,23 +102,16 @@ public class DatabaseSeeder {
         }
     }
 
-    /**
-     * Helper method to create a new user in both databases.
-     */
-    private static void createUser(Connection authConn, Connection studentConn,
-                                   String fullName, String email, String password, String role) throws Exception {
-
-        // --- Step 1: Create user in AuthDB ---
+    private static void createUser(Connection authConn, Connection studentConn, String fullName, String email, String password, String role) throws Exception {
+        //Create user in AuthDB
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         String sqlAuth = "INSERT INTO Users (Email, PasswordHash, Role) VALUES (?, ?, ?)";
         int newUserId = -1;
-
         try (PreparedStatement stmt = authConn.prepareStatement(sqlAuth, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, email);
             stmt.setString(2, hashedPassword);
             stmt.setString(3, role);
             stmt.executeUpdate();
-
             try (var rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
                     newUserId = rs.getInt(1);
@@ -137,7 +121,7 @@ public class DatabaseSeeder {
             }
         }
 
-        // --- Step 2: Create profile in StudentDB (if needed) ---
+        //Create profile in StudentDB
         if (role.equalsIgnoreCase("Student")) {
             String sqlStudent = "INSERT INTO Students (UserID, FullName, Email) VALUES (?, ?, ?)";
             try (PreparedStatement stmt = studentConn.prepareStatement(sqlStudent)) {

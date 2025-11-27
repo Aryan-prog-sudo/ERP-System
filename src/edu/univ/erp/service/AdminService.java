@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 //This class basically controls all the logic inside the admin pages
+//Added logger to extend functionality, gonna add it to CV
 public class AdminService {
     //The attributes needed by the Admin
     //These attributes are instances of all the DAOs that the Admin would use

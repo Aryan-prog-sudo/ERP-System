@@ -9,13 +9,14 @@ import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ComponentAdapter; // <-- NEW IMPORT
-import java.awt.event.ComponentEvent;   // <-- NEW IMPORT
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
 //Course Catalog panel
+//In this panel the student can see all the sections, ones he is registeres to as well
 public class CourseCatalogPanel extends JPanel {
     //Color Theme
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
@@ -58,6 +59,7 @@ public class CourseCatalogPanel extends JPanel {
     }
 
 
+    //Load data regarding the section using the backend calls
     private void loadData() {
         this.sectionList = studentService.getCourseCatalog();
         tableModel.setRowCount(0);
@@ -79,7 +81,7 @@ public class CourseCatalogPanel extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BACKGROUND);
 
-        // 1. Top Title Row
+        //Top Title Row
         JPanel topRow = new JPanel(new BorderLayout());
         topRow.setBackground(COLOR_BACKGROUND);
 
@@ -100,7 +102,7 @@ public class CourseCatalogPanel extends JPanel {
         topRow.add(titleLabel, BorderLayout.CENTER);
         topRow.add(refreshButton, BorderLayout.EAST);
 
-        // 2. Bottom Deadline Row
+        //Bottom Deadline Row below the course catalog that displays the deadline
         deadlineLabel = new JLabel("Loading deadline...", SwingConstants.CENTER);
         deadlineLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
         deadlineLabel.setForeground(new Color(220, 50, 50)); // Red text
@@ -113,14 +115,13 @@ public class CourseCatalogPanel extends JPanel {
     }
 
     private void updateDeadlineLabel() {
-        // Fixed case: GetDeadlineString -> getDeadlineString
         String deadline = studentService.GetDeadlineString();
         deadlineLabel.setText("Registration Deadline: " + deadline);
     }
 
+    //Create table to view the courses
     private JScrollPane createTablePanel() {
         String[] columnNames = {"Course Code", "Title", "Credits", "Instructor", "Time", "Seats", "Actions"};
-
         tableModel = new DefaultTableModel(null, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -223,6 +224,14 @@ public class CourseCatalogPanel extends JPanel {
                 SectionView selectedSection = sectionList.get(row);
                 int sectionId = selectedSection.sectionId();
                 String action = table.getValueAt(row, column).toString();
+
+                //Warning panel while registring or dropping
+                String Message = "Do you want to "+ action.toLowerCase();
+                String Title = "Confirm" + action;
+                int Confirm = JOptionPane.showConfirmDialog(CourseCatalogPanel.this, Message, Title, JOptionPane.YES_NO_OPTION);
+                if(Confirm != JOptionPane.YES_OPTION){
+                    return;
+                }
 
                 String resultMessage = "";
                 if ("Register".equals(action)) {
