@@ -16,7 +16,7 @@ import java.util.List;
 
 public class TimetablePanel extends JPanel {
 
-    // --- Color Theme ---
+    //Color Theme
     private static final Color COLOR_BACKGROUND = Color.WHITE;
     private static final Color COLOR_TEXT_DARK = new Color(30, 30, 30);
     private static final Color COLOR_BORDER = new Color(220, 220, 220);
@@ -37,7 +37,7 @@ public class TimetablePanel extends JPanel {
         add(createHeaderPanel(onGoBack), BorderLayout.NORTH);
         add(createTablePanel(), BorderLayout.CENTER);
 
-        // Auto-refresh when shown
+        //Auto-refresh when shown
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
@@ -58,7 +58,7 @@ public class TimetablePanel extends JPanel {
                     sec.credits(),
                     sec.instructorName(),
                     sec.timeSlot()
-                    // REMOVED: Location
+                    //Location
             });
         }
     }
@@ -86,7 +86,6 @@ public class TimetablePanel extends JPanel {
     }
 
     private JScrollPane createTablePanel() {
-        // UPDATED: Removed "Location" from column names
         String[] columnNames = {"Course Code", "Title", "Credits", "Instructor", "Time"};
 
         tableModel = new DefaultTableModel(null, columnNames) {

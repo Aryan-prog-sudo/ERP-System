@@ -182,7 +182,7 @@ public class Main extends JFrame {
     private void createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
-        // --- File Menu ---
+        // File Menu
         JMenu fileMenu = new JMenu("File");
         fileMenu.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
@@ -295,7 +295,7 @@ public class Main extends JFrame {
         }
         loginDialog.setVisible(true);
 
-        // If dialog closes without login, exit app
+        //If dialog closes without login, exit app
         if (!mainApp.isVisible()) {
             System.exit(0);
         }

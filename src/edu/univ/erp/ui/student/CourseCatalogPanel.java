@@ -15,13 +15,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-/**
- * Course Catalog Panel.
- * UPDATED: Auto-refreshes when opened.
- * FIXED: SeatsAvailableRenderer logic and button hover variables.
- */
+//Course Catalog panel
 public class CourseCatalogPanel extends JPanel {
-
     //Color Theme
     private static final Color COLOR_PRIMARY = new Color(0, 82, 204);
     private static final Color COLOR_PRIMARY_DARK = new Color(0, 62, 184);
@@ -158,7 +153,7 @@ public class CourseCatalogPanel extends JPanel {
         return scrollPane;
     }
 
-    // --- Inner class for Table (ButtonColumnRenderer) ---
+    //Inner class for Table (ButtonColumnRenderer)
     private class ButtonColumnRenderer extends DefaultTableCellRenderer {
         private final JButton registerButton;
         private final JButton dropButton;
@@ -183,7 +178,7 @@ public class CourseCatalogPanel extends JPanel {
         }
     }
 
-    // --- Inner class for Table (SeatsAvailableRenderer) ---
+    //Inner class for Table (SeatsAvailableRenderer)
     private class SeatsAvailableRenderer extends DefaultTableCellRenderer {
         public SeatsAvailableRenderer() {
             super();

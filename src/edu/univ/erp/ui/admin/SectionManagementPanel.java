@@ -255,6 +255,7 @@ public class SectionManagementPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Please select a valid course and instructor.", "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
+
         Course course = (Course) courseObj;
         Instructor instructor = (Instructor) instObj;
 
@@ -262,6 +263,11 @@ public class SectionManagementPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
+
+        int Confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to create this course: "+ section +"with the course:" +course.courseCode() , "Confirm course creation", JOptionPane.YES_NO_OPTION);
+        if(Confirm!= JOptionPane.YES_OPTION){
+            return;
+        };
 
         boolean success = adminService.createNewSection(course, instructor, section, time, capacityStr);
 

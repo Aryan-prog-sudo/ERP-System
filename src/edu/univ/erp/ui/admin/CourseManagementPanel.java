@@ -189,11 +189,14 @@ public class CourseManagementPanel extends JPanel {
             return;
         }
 
-        // --- THIS IS THE REAL BACKEND CALL ---
+        int Confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to create this course: "+ code +"with the title:" + title, "Confirm course creation", JOptionPane.YES_NO_OPTION);
+        if(Confirm!= JOptionPane.YES_OPTION){
+            return;
+        };
+        //Backend Call
         boolean success = adminService.createNewCourse(code, title, creditsStr);
 
         if (success) {
-            // --- UPDATED: Refresh table from database ---
             loadData();
 
             // Clear the form

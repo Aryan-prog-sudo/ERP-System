@@ -176,9 +176,12 @@ public class UserManagementPanel extends JPanel {
         String role = (String) roleComboBox.getSelectedItem();
         //All the fields are to be filled, and non can be empty
         if (name.isEmpty() || email.isEmpty() || "Select role".equals(role)) {
-            JOptionPane.showMessageDialog(this,
-                    "Please fill in all fields.", "Input Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
+        }
+        int Confirm = JOptionPane.showConfirmDialog(this, "Are you sure tht you want to create the user: "+ name + " with the role"+ role, "Confirm User Creation", JOptionPane.YES_NO_OPTION);
+        if(Confirm!= JOptionPane.YES_OPTION){
+            return;//
         }
         String defaultPassword = "defaultPassword123"; //This is the default password provided everytime the user is created
         //Backend Call to the service call

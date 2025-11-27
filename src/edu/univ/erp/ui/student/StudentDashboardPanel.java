@@ -25,7 +25,7 @@ public class StudentDashboardPanel extends JPanel {
         setBackground(COLOR_BACKGROUND);
         setBorder(new EmptyBorder(20, 40, 40, 40));
 
-        // --- Welcome Header ---
+        //Welcome Header
         JPanel headerPanel = new JPanel();
         headerPanel.setBackground(COLOR_BACKGROUND);
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
