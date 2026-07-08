@@ -237,11 +237,11 @@ Edit `edu/univ/erp/util/DatabaseUtil.java` and set your MySQL credentials:
 ```java
 private static final String AuthDB_URL = "jdbc:mysql://localhost:3306/AuthDB";
 private static final String AuthDB_User = "AuthUser";
-private static final String AuthDB_PassWord = "AUTHPASSWORD";
+private static final String AuthDB_PassWord = ;
 
 private static final String StudentDB_URL = "jdbc:mysql://localhost:3306/StudentDB";
 private static final String StudentDB_User = "StudentUser";
-private static final String StudentDB_PassWord = "STUDENTPASSWORD";
+private static final String StudentDB_PassWord = ;
 ```
 
 > 🔒 For a production setup, externalize these into environment variables or a `.properties` file instead of hardcoding them.
